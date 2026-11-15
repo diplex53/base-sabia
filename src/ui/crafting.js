@@ -43,13 +43,15 @@ function recipeRow(state, o, ctx) {
     return el('li', { class: 'cr-in' + (have >= n - 1e-9 ? '' : ' is-missing') }, el('span', {}, invName(k)), ' ', el('span', { class: 'num' }, t('craft.have', { have: n0(have), need: n })));
   });
   const outs = Object.entries(o.out).map(([k, n]) => el('li', { class: 'cr-out' }, el('strong', {}, (n > 1 ? n + ' x ' : '') + invName(k))));
+  const title = tOr('recipe.' + o.id, ''); // named processes (e.g. sifting regolith); plain recipes are named by their output
   return el('li', { class: 'cr-row' + (o.ok ? ' is-ok' : '') },
+    title ? el('p', { class: 'cr-title' }, el('strong', {}, title)) : null,
     el('ul', { class: 'cr-ins' }, ins),
     el('span', { class: 'cr-arrow', 'aria-hidden': 'true' }, '→'),
     el('ul', { class: 'cr-outs' }, outs),
     el('div', { class: 'cr-act' },
       el('button', { type: 'button', class: 'btn btn-primary', 'data-fid': 'craft-' + o.id, disabled: !o.ok,
-        onclick: () => { const r = ctx.act({ type: 'craft', recipeId: o.id }); if (r && r.ok) ctx.toastCraft && ctx.toastCraft(invName(Object.keys(o.out)[0])); } }, t('craft.do')),
+        onclick: () => { const r = ctx.act({ type: 'craft', recipeId: o.id }); if (r && r.ok) ctx.toastCraft && ctx.toastCraft(title || invName(Object.keys(o.out)[0])); } }, t('craft.do')),
       o.ok ? null : el('p', { class: 'reason small' }, t(o.reason || 'err.missingIngredients'))));
 }
 

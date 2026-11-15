@@ -52,4 +52,12 @@ export default {
   'mod.moduleBuilder.name': 'Module builder',
   'mod.moduleBuilder.desc': 'A big printer that assembles the kits of larger structures, such as the solar panel, the hospital and the dome.',
   'mod.moduleBuilder.science': 'Large 3D printers can build structures from local materials. NASA tests this kind of construction for Mars and the Moon.',
+
+  // Crafting economy (new Colony Mode game).
+  'recipe.siftRegolith': 'Sift regolith',
+  'craft.welcome': 'Craft items at the Production Table (P key). Inventory: V key.',
+  'res.ironBars': 'Iron bars',
+  'res.ironBarsShort': 'Iron bars (building, upgrades and repairs). Craft them at the Production Table (P).',
+  'err.notEnoughBars': 'Not enough iron bars. Craft them at the Production Table (P).',
+  'hint.craftAllGood': 'All good. Sift regolith and craft kits at the Production Table (P key) to grow the base.',
 };

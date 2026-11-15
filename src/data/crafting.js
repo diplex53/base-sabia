@@ -14,6 +14,8 @@ const R = (id, station, inp, out) => ({ id, station, in: inp, out });
 
 // station 'table' = Mesa de Producao, 'builder' = Construtora de Modulos (needs one on the map).
 export const RECIPES = [
+  // ASSUMPTION: sifting regolith yields basic ores (team request: "limpar o regolito e tirar ferro dele").
+  R('siftRegolith', 'table', { regolith: 5 }, { iron: 2, silicon: 1, aluminum: 1 }),
   R('ironBar', 'table', { iron: 3 }, { ironBar: 1 }),
   R('gear', 'table', { iron: 3 }, { gear: 2 }),
   R('reinforcedIronBar', 'table', { iron: 3, nickel: 1 }, { reinforcedIronBar: 1 }),
@@ -73,7 +75,7 @@ export const SHIP_ORES = { titanium: 9, tungsten: 8, lithium: 4, cobalt: 2, nick
 // ASSUMPTION: what an expedition to the mineral outcrop adds (x reward fraction and geologist bonus).
 export const MINERALS_ORES = { titanium: 3, tungsten: 2, lithium: 2, cobalt: 1, nickel: 2, boron: 2, gold: 1 };
 // Craft economy bootstrap: starter items; one craftTable and one drillBasic are placed next to the start modules.
-export const CRAFT_START_INV = { ironBar: 6, gear: 4, wire: 4, sulfurCement: 4, siliconPlate: 3, temperedGlass: 3 };
+export const CRAFT_START_INV = { ironBar: 14, gear: 6, wire: 12, sulfurCement: 6, siliconPlate: 9, temperedGlass: 5, aluminumOxide: 2, 'kit.solar': 1 };
 export const CRAFT_START_MODULES = ['craftTable', 'drillBasic'];
 
 // Drill output per cycle (team list: "produz a cada 20 segundos").

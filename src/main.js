@@ -195,6 +195,7 @@ async function startColony(difficulty, useRealSun = false) {
   started = true;
   setLaunchScreen(false);
   writeSave(game);
+  if (game.state.economy === 'craft') toast(t('craft.welcome'));
 }
 
 function resetStoryUi() { tracker.reset(); storyCard.reset(); guide = currentGuide(null); guideSig = '#reset'; }

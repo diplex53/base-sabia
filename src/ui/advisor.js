@@ -23,5 +23,5 @@ export function advise(state) {
     const v = a[k];
     if (Number.isFinite(v) && v < LOW_SOLS && v < worstVal) { worstVal = v; worst = k; }
   }
-  return worst ? 'hint.' + worst : 'hint.allGood';
+  return worst ? 'hint.' + worst : state.economy === 'craft' ? 'hint.craftAllGood' : 'hint.allGood';
 }
