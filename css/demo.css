@@ -64,3 +64,4 @@ body.is-demo .demo-caption .demo-continue { margin-top: 0; flex: none; padding: 
 @media (max-width: 1100px) {
   body.is-demo .demo-caption:not([hidden]) { bottom: 58px; width: calc(100vw - 24px); padding: 9px 14px; }
 }
+@media (max-width: 819px) { body.is-demo #topbar .top-right { display: none !important; } }
