@@ -5,6 +5,8 @@ export default {
   'demo.continue': 'Continue ▶ (Space)',
   'demo.b.devil': 'Dust devil: on Mars they sometimes clean the solar panels, as happened to the Spirit and Opportunity rovers.',
   'demo.b.quake': 'Marsquake! NASA\'s InSight lander recorded more than 1,300 quakes on Mars.',
+  'demo.b.drill': 'The drill mines on its own: iron, copper, silicon and other ores come out of the Martian ground.',
+  'demo.b.craft': 'At the Production Table ores become bars, wires and glass, and then structure kits. Inventory on the V key, crafting on the P key.',
   'demo.b.failure': 'A module broke down. Parts and an engineer fix it: on Mars there is no repair service to call.',
   'demo.badge': 'Presentation',
   'demo.exit': 'Exit',

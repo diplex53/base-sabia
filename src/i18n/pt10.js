@@ -5,6 +5,8 @@ export default {
   'demo.continue': 'Continuar ▶ (Espaço)',
   'demo.b.devil': 'Redemoinho de poeira: em Marte eles às vezes limpam os painéis solares, como aconteceu com os rovers Spirit e Opportunity.',
   'demo.b.quake': 'Martemoto! O módulo InSight da NASA registrou mais de 1.300 tremores em Marte.',
+  'demo.b.drill': 'A broca minera sozinha: ferro, cobre, silício e outros minérios saem do solo de Marte.',
+  'demo.b.craft': 'Na Mesa de Produção os minérios viram barras, fios e vidro, e depois kits de estruturas. Inventário na tecla V, fabricação na tecla P.',
   'demo.b.failure': 'Um módulo quebrou. Peças e um engenheiro consertam: em Marte não dá para chamar a assistência técnica.',
   'demo.badge': 'Apresentação',
   'demo.exit': 'Sair',

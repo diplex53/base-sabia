@@ -131,6 +131,7 @@ demo = createAutoplay({
   modalsOpen: () => modals.isOpen(),
   closeModals: () => modals.closeAll(),
   openTech: () => modals.showTech(),
+  openCraft: () => modals.showCraft(),
   showScience: (id) => modals.showScience(id, { spe: lastSpe || (game.state.env && game.state.env.spe) }),
   onExit: () => exitDemo(),
   onReplay: () => startDemo(demo.mode),

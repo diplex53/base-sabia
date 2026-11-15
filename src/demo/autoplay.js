@@ -9,6 +9,7 @@ import {
   CROP_YIELD_KG_M2_SOL, GH_WATER_KG_M2_SOL, SOL_HOURS,
 } from '../data/constants.js';
 import * as sel from '../sim/selectors.js';
+import { invGet } from '../sim/crafting.js';
 import { t, onLangChange } from '../i18n/i18n.js';
 
 export const DEMO_SEED = 34;          // dust storm sol 7, real DONKI flare sol 23, ship sol 27, dome ~sol 117
@@ -233,6 +234,26 @@ function build(game, crewNeed) {
   }
 }
 
+// Presenter mode only: show the crafting system once, at low priority (spare parts, room left, not saving for the dome).
+const CRAFT_SHOW_MIN_SOL = 10;
+const CRAFT_SHOW_MIN_PARTS = 15;
+function craftShow(game) {
+  const s = game.state, r = s.resources;
+  const p = plan(s);
+  const of = (ty) => (p.byType[ty] || []);
+  const ready = (ty) => of(ty).some((sl) => sl.module.status === 'ok');
+  if (ready('craftTable') && invGet(s, 'iron') >= 3 && !(s.inv && s.inv.ironBar)) {
+    return safe(game, { type: 'craft', recipeId: 'ironBar' }) ? 'crafted' : null;
+  }
+  if (s.t < CRAFT_SHOW_MIN_SOL || r.parts < CRAFT_SHOW_MIN_PARTS || p.free.length < 6) return null;
+  if (has(s, 'domeEngineering') && !of('dome').length) return null;
+  const slot = [...PREFERRED_SLOTS].reverse().find((id) => p.free.includes(id)); // outer slots, away from the core
+  if (!slot) return null;
+  if (!of('drillBasic').length) safe(game, { type: 'build', slotId: slot, moduleType: 'drillBasic' });
+  else if (!of('craftTable').length) safe(game, { type: 'build', slotId: slot, moduleType: 'craftTable' });
+  return null;
+}
+
 function expeditions(game, need) {
   const s = game.state, r = s.resources;
   if (s.env.spe || s.sheltering || sel.roversFree(s) <= 0) return;
@@ -282,7 +303,7 @@ const CONTINUE_KEYS = new Set([' ', 'Spacebar', 'Enter', 'ArrowRight']);
  */
 
 /**
- * h = { getGame, modalsOpen, closeModals, openTech, showScience(id), onExit, onReplay, onPlay }
+ * h = { getGame, modalsOpen, closeModals, openTech, openCraft, showScience(id), onExit, onReplay, onPlay }
  */
 export function createAutoplay(h) {
   const hasDom = typeof document !== 'undefined';
@@ -387,6 +408,7 @@ export function createAutoplay(h) {
   function startBeat(key) {
     cur = { key, until: presenter ? Infinity : tReal + (BEAT_SECONDS[key] || 6), slow: key !== 'intro' };
     log.push({ key, at: Math.round(tReal), sol: Math.floor(h.getGame().state.t) + 1 });
+    if (key === 'craft' && h.openCraft && !h.modalsOpen()) { try { h.openCraft(); modalLimit = TECH_SECONDS; modalT = 0; demoModal = presenter; } catch (e) { /* ignore */ } }
     if (key === 'tech' && h.openTech && !h.modalsOpen()) { try { h.openTech(); modalLimit = TECH_SECONDS; modalT = 0; demoModal = presenter; } catch (e) { /* ignore */ } }
     if (key === 'city' && hasDom) {
       const cp = document.getElementById('city-panel');
@@ -438,6 +460,7 @@ export function createAutoplay(h) {
     let guard = 0;
     while (budget >= CHUNK && guard++ < 60 && !game.state.over) {
       demoPolicy(game);
+      if (presenter && !seen.has('craft') && craftShow(game) === 'crafted') push('craft');
       game.tick(CHUNK);
       budget -= CHUNK;
     }
@@ -452,6 +475,7 @@ export function createAutoplay(h) {
         else if (ev.moduleType === 'extractor' || ev.moduleType === 'greenhouse') push('water');
         else if (ev.moduleType === 'reactor') push('reactor');
         else if (ev.moduleType === 'dome') push('dome');
+        else if (presenter && ev.moduleType === 'drillBasic') push('drill');
       } else if (ev.type === 'event.start') {
         if (ev.kind === 'dustRegional' || ev.kind === 'dustGlobal') push('dust');
         else if (ev.kind === 'spe') push('spe');
