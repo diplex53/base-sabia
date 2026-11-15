@@ -165,7 +165,7 @@ function startDemo(mode = 'presenter') {
   speed = 1;
   started = true;
   setLaunchScreen(false);
-  demo.start({ mode, hold: demoHold });
+  demo.start({ mode, hold: demoHold, fast: Number(demoQuery.get("x")) || 1 });
 }
 function exitDemo({ toStart = true } = {}) {
   demo.stop(); hideVictory();

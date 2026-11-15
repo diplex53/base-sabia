@@ -317,6 +317,7 @@ export function createAutoplay(h) {
   let ui = null;
   let presenter = true;
   let hold = 10;   // presenter mode: seconds each stop stays before going on by itself (0 = wait for the key)
+  let fastMul = 1; // trailer: multiplies the fast play speed (?demo=1&x=4)
   let waitT = 0;   // real seconds spent on the current stop
   let lastWall = 0; // wall clock of the previous update (the hold time must not depend on the frame rate)
   const wallNow = () => (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now());
@@ -361,7 +362,7 @@ export function createAutoplay(h) {
     if (cur || wait) {
       ui.capText.textContent = cur ? t('demo.b.' + cur.key) : '';
       ui.capText.hidden = !cur;
-      const left = hold > 0 && wait ? Math.max(0, Math.ceil((cur && cur.key === 'dome' ? Math.max(hold, 8) : hold) - waitT)) : null;
+      const left = hold > 0 && wait ? Math.max(0, Math.ceil((cur && cur.key === 'dome' ? Math.max(hold, hold < 2 ? 4 : 8) : hold) - waitT)) : null;
       ui.cont.textContent = t('demo.continue') + (left != null ? ' · ' + left : '');
       ui.cont.hidden = !wait;
       ui.caption.hidden = false;
@@ -454,7 +455,7 @@ export function createAutoplay(h) {
         if (hold > 0) {
           const before = Math.ceil(hold - waitT);
           waitT += wallDt;
-          if (waitT >= (cur && cur.key === 'dome' ? Math.max(hold, 8) : hold)) { advance(); return; } // the victory scene stays at least 8 s
+          if (waitT >= (cur && cur.key === 'dome' ? Math.max(hold, hold < 2 ? 4 : 8) : hold)) { advance(); return; } // the victory scene stays at least 8 s
           if (Math.ceil(hold - waitT) !== before) paint();
         }
         return;
@@ -475,7 +476,7 @@ export function createAutoplay(h) {
     if (h.modalsOpen()) return; // the sim waits while a panel is on screen
     // city panel shows up when the colony grows
     if (hasDom && !seen.has('city')) { const cp = document.getElementById('city-panel'); if (cp && !cp.hidden && game.state.t > 30) push('city'); }
-    const spd = cur && cur.slow ? SLOW : FAST;
+    const spd = cur && cur.slow ? SLOW : FAST * fastMul;
     budget += (dt * spd) / SOL_REAL;
     let guard = 0;
     while (budget >= CHUNK && guard++ < 60 && !game.state.over) {
@@ -525,6 +526,7 @@ export function createAutoplay(h) {
   function start(opts = {}) {
     buildUi();
     presenter = opts.mode !== 'auto';
+    fastMul = Number.isFinite(opts.fast) && opts.fast >= 1 ? Math.min(6, opts.fast) : 1;
     hold = Number.isFinite(opts.hold) && opts.hold >= 0 ? opts.hold : 10;
     waitT = 0;
     demoModal = false;

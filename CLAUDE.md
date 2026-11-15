@@ -50,6 +50,7 @@ Publicado em https://diplex53.github.io/base-sabia/ (repositório público `dipl
   - Tela inicial: `css/launch.css` põe Continuar / Novo jogo / Modo História / Iniciar apresentação no topo, maiores; dificuldade e extras abaixo.
   - Etiqueta de retorno antes deste lote: `estavel-1230`.
 - 13h: reator de fissão deixou de ser único (`unique` removido em `balance.js`); revisão por script das 24 estruturas sem problemas; `README.md` em inglês (explicação do projeto + declaração de uso de IA, versão em inglês do `AI_USE.md`).
+- 13h40: endereço "trailer" para gravar o vídeo de 30 a 45 s: `?demo=1&t=0.7&x=4` (x multiplica a velocidade entre paradas, até 6). Medido: vitória do domo aos 35 s, cartão final aos 39 s. O vídeo é gravado pela equipe com a gravação de tela do Windows; não há ffmpeg neste PC.
 - Falta, sem código: revisar `PROJECT_PAGE.md`, `REFERENCES.md` e `DEMO_SCRIPT.md` (foram escritos fora desta sessão e ainda não cobrem a expansão), gravar a demo, enviar.
 - Pendências conhecidas: texto de `err.notStaffable` não existe nos arquivos de idioma; domo fácil demais no Cadete (bot termina entre os sols 109 e 170); cerca de 30 fps no 3D com o mapa maior; capítulos 2 e 3 da história testados só por bot.
 - Fora do escopo (dito à equipe como "futuro"): substituir peças por itens (economia de crafting), mapa 2500x, barras de qualidade de vida com taxas inventadas, casas e prédios.
