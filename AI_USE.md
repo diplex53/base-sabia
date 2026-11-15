@@ -37,6 +37,10 @@ Cada linha: o que pedimos, por que pedimos, o que a IA fez.
 | Dom, 10h50 | Tecnologias como árvore de bolinhas ligadas | Ficar mais claro o que libera o quê | Delegado a subagente |
 | Dom, 10h55 | Modo apresentação que joga sozinho, com legendas | A equipe não pode jogar ao vivo na frente da banca; a banca abre o link e a equipe comenta | Delegado a subagente |
 | Dom, 11h | Manter um arquivo de estado no computador para continuar em outra conta | O limite de uso da conta pode acabar | `CLAUDE.md` atualizado a cada etapa |
+| Dom, 11h10 | Descrição científica que a equipe escreveu em cada cartão de construção | Mostrar a ciência no momento em que o jogador escolhe o que construir | Subagente usou os textos da equipe (`docs/lista-equipe.txt`), corrigindo ortografia e os pontos cientificamente imprecisos |
+| Dom, 11h10 | Trocar o nome para "Protocol: Ares" | Decisão da equipe | Subagente trocou o título; a base dentro da história segue como Base Sabiá |
+| Dom, 11h10 | Chão de construção da cor do solo com um "+", área de construção 2 vezes maior, mundo cerca de 50 vezes maior | O concreto cinza destoava e o mapa parecia pequeno | Subagente em cópia separada do código; o mundo maior é só visual (terreno distante simples e névoa) para não derrubar a fluidez |
+| Dom, 11h10 | Brocas, minérios e sistema de crafting com as receitas da equipe | Ideia central dos colegas que não programam | Subagente em cópia separada. Decisão da IA, por causa do prazo: o crafting entra como caminho adicional (kit fabricado constrói sem custo e mais rápido) em vez de substituir o sistema de peças, para não quebrar o modo história nem os testes |
 
 ## O que a IA não decidiu
 
