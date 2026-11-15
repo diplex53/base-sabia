@@ -29,6 +29,7 @@ export const SCIENCE_PANELS = {
   'over.water': S(['NASA, Space Station water recovery', WATER98]),
   'over.food': S(['NASA BVAD (life support baseline)', BVAD]),
   'over.blackout': S(['NASA/JPL, Opportunity', JPL_DUST]),
+  'over.dose': S(['NASA, Human Performance', CAREER]),
   'over.noCrew': S(['NASA, Human Performance', CAREER]),
 
   // Phase 3: events

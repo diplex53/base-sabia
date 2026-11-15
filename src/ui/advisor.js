@@ -14,6 +14,7 @@ export function advise(state) {
   const mods = state.slots.map((s) => s.module).filter(Boolean);
   if (mods.some((m) => m.status === 'broken')) return 'hint.repair';
   if (mods.some((m) => m.type === 'solar' && (m.dust || 0) > DUST_HINT && m.status !== 'cleaning')) return 'hint.clean';
+  if (state.env && state.env.comm && state.env.comm.blackout) return 'hint.blackout';
   if (state.ship && state.ship.awaitingDecision) return 'hint.decide';
   const a = autonomy(state);
   let worst = null;

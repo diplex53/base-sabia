@@ -221,6 +221,9 @@ export default {
   'over.water': 'A água acabou. A tripulação voltou para a Terra.',
   'over.food': 'A comida acabou. A tripulação voltou para a Terra.',
   'over.blackout': 'O habitat ficou sem energia. A tripulação voltou para a Terra.',
+  'over.dose': 'Alguém chegou ao limite de 600 mSv de radiação. A missão foi abortada e a tripulação voltou para a Terra.',
+  'panel.over.dose.title': 'O limite de 600 mSv',
+  'panel.over.dose.body': 'A NASA limita a dose de um astronauta, na carreira toda, a 600 mSv. Quem chega a esse limite precisa parar de voar. Abrigar a tripulação na hora certa mantém a dose baixa.',
   'over.noCrew': 'Não sobrou nenhum colono na base.',
 
   // painéis de ciência

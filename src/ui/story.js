@@ -1,5 +1,6 @@
 import { t } from '../i18n/i18n.js';
 import { el, setCls, fmt } from './util.js';
+import * as sel from '../sim/selectors.js';
 import { getLang } from '../i18n/i18n.js';
 
 const KEY = 'baseSabia.story.v1';
@@ -127,7 +128,7 @@ export function createObjectiveCard() {
   let lastState = null;
 
   function render(state) {
-    const st = state.story;
+    const st = sel.storyInfo ? (sel.storyInfo(state) || state.story) : state.story;
     const steps = st.steps || [];
     const idx = Math.min(st.stepIdx || 0, Math.max(0, steps.length - 1));
     const cur = steps[idx];
