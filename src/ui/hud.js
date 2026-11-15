@@ -1,9 +1,10 @@
 import { t, getLang } from '../i18n/i18n.js';
-import { el, icon, setText, setAttr, setCls, fmt, fmtSigned, pad2, langToggle } from './util.js';
+import { el, icon, tOr, setText, setAttr, setCls, fmt, fmtSigned, pad2, langToggle } from './util.js';
 import { getSol, getHour, capacity, autonomy, netPerSol, population, speWarningSols } from '../sim/selectors.js';
 import { SCIENCE_PANELS } from '../data/sciencePanels.js';
 import { createBanner } from './banner.js';
 import { colonyProgress } from './progress.js';
+import { createCity, domeInfo } from './city.js';
 
 const MAIN = ['energy', 'o2', 'water', 'food'];
 const MARK = { ok: '●', warn: '▲', danger: '■' };
@@ -64,7 +65,16 @@ export function createHud(ctx) {
   c.time.append(c.timeTxt, c.dayGlyph);
   c.ship = el('button', { type: 'button', class: 'chip chip-btn', onclick: () => ctx.openShip() }, icon('ship'), c.shipTxt, c.shipShort);
   c.ship.querySelector('.num').classList.add('lbl-wide');
-  const chipWrap = el('div', { class: 'status-chips' }, c.time, c.pop, c.ship, c.delay);
+  c.healthBar = el('i');
+  c.healthTxt = el('span', { class: 'num' });
+  c.health = el('span', { class: 'chip chip-health', hidden: true }, c.healthTxt, el('span', { class: 'hbar', 'aria-hidden': 'true' }, c.healthBar));
+  subs.methane = { label: el('span', { class: 'sub-label lbl-wide' }), val: el('span', { class: 'num' }) };
+  subs.methane.root = el('span', { class: 'chip chip-res', hidden: true }, icon('energy'), subs.methane.label, subs.methane.val);
+  subWrap.append(subs.methane.root);
+  subs.dome = { val: el('span', { class: 'num' }) };
+  subs.dome.root = el('button', { type: 'button', class: 'chip chip-btn chip-res', hidden: true, onclick: () => openCity() }, icon('shelter'), subs.dome.val);
+  subWrap.append(subs.dome.root);
+  const chipWrap = el('div', { class: 'status-chips' }, c.time, c.pop, c.health, c.ship, c.delay);
 
   const speedBtns = [0, 1, 2, 4].map((s) => el('button', {
     type: 'button', class: 'seg-btn', 'data-speed': s, onclick: () => ctx.setSpeed(s),
@@ -92,6 +102,14 @@ export function createHud(ctx) {
   const menuBtn = el('button', { type: 'button', class: 'btn btn-round menu-btn', 'aria-expanded': 'false', 'aria-haspopup': 'true' }, icon('menu'));
   const menu = el('div', { class: 'menu-pop', hidden: true });
   const controls = el('div', { class: 'controls' });
+  const cityPanelEl = document.getElementById('city-panel');
+  const city = cityPanelEl ? createCity(cityPanelEl, ctx) : { update: () => false };
+  let cityOn = false;
+  function openCity() {
+    if (mq.matches) showTab(hudEl.dataset.tab === 'city' ? '' : 'city');
+    else if (cityPanelEl) cityPanelEl.classList.toggle('is-collapsed');
+  }
+  const cityBtn = el('button', { type: 'button', class: 'btn', hidden: true, onclick: () => openCity() });
   const collapsible = [lang, notebookBtn, dataBtn, progMenu, glossBtn];
   const row2 = el('div', { class: 'top-row top-ctl' }, chipWrap, subWrap, el('div', { class: 'top-right' }, shelterBtn, speedSeg, pausedTag, controls, menuBtn));
 
@@ -109,7 +127,7 @@ export function createHud(ctx) {
     setMenu(false);
     collapsible.forEach((n) => menu.append(n));
     const target = mq.matches ? menu : controls;
-    [helpBtn, techBtn].forEach((n) => target.append(n));
+    [helpBtn, techBtn, cityBtn].forEach((n) => target.append(n));
   }
   if (mq.addEventListener) mq.addEventListener('change', placeControls); else if (mq.addListener) mq.addListener(placeControls);
   placeControls();
@@ -176,7 +194,7 @@ export function createHud(ctx) {
       else if (Number.isFinite(a) && a < 2) st = 'warn';
       setText(r.label, t('res.' + k));
       setText(r.stock, fmt(stock, k === 'energy' ? 0 : 1));
-      setText(r.unit, k === 'energy' ? ' / ' + fmt(cap.energy, 0) + ' kWh' : ' kg');
+      setText(r.unit, k === 'energy' ? ' / ' + fmt(cap.energy, 0) + ' kWh' : (cap[k] > 0 ? ' / ' + fmt(cap[k], 0) + ' kg' : ' kg'));
       setText(r.net, t('ui.perSolShort', { n: fmtSigned(net[k], 1) }));
       setText(r.auto, stock <= 0.0001 ? t('ui.empty') : Number.isFinite(a) ? t('ui.lastsShort', { n: fmt(a, 1) }) : '');
       setText(r.state, MARK[st]);
@@ -191,6 +209,34 @@ export function createHud(ctx) {
       setAttr(subs[k].root, 'title', t('res.' + k + 'Short'));
       setAttr(subs[k].root, 'aria-label', t('res.' + k) + ': ' + fmt(state.resources[k], 0));
     }
+    // colony health (Appendix E.3): only when the core provides it
+    const hasHealth = typeof state.health === 'number';
+    c.health.hidden = !hasHealth;
+    if (hasHealth) {
+      const hp = Math.max(0, Math.min(100, state.health));
+      setText(c.healthTxt, t('ui.health') + ' ' + fmt(hp, 0));
+      c.healthBar.style.width = hp.toFixed(0) + '%';
+      setCls(c.health, 'low', hp < 50); setCls(c.health, 'mid', hp >= 50 && hp < 70);
+      setAttr(c.health, 'title', t('ui.healthTitle'));
+      setAttr(c.health, 'aria-label', t('ui.healthAria', { n: fmt(hp, 0) }));
+    }
+    const hasMeth = state.resources.methane != null;
+    subs.methane.root.hidden = !hasMeth;
+    if (hasMeth) {
+      setText(subs.methane.label, t('res.methane'));
+      setText(subs.methane.val, fmt(state.resources.methane, 0));
+      setAttr(subs.methane.root, 'title', t('res.methaneShort'));
+    }
+    const dm = domeInfo(state);
+    const showDome = !!dm && (dm.kind !== 'none');
+    subs.dome.root.hidden = !showDome;
+    if (showDome) setText(subs.dome.val, t('ui.dome.title') + ' ' + (dm.kind === 'done' ? '✓' : Math.round(dm.progress * 100) + '%'));
+    cityOn = city.update(state);
+    if (cityPanelEl) cityPanelEl.hidden = !cityOn;
+    cityBtn.hidden = !cityOn;
+    setText(cityBtn, t('ui.cityBtn'));
+    const cityTab = document.querySelector('#sheet-tabs [data-tab="city"]');
+    if (cityTab) cityTab.hidden = !cityOn;
     const hr = getHour(state);
     const h = Math.floor(hr);
     setText(c.timeTxt, t('ui.sol', { n: getSol(state) }) + ' · ' + pad2(h) + ':' + pad2(Math.min(59, Math.floor((hr - h) * 60))));

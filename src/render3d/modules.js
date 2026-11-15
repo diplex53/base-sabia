@@ -153,6 +153,11 @@ export class ModuleView {
     if (active) {
       if (this.type === 'moxie') ec.multiplyScalar(0.55 + 0.45 * (0.5 + 0.5 * Math.sin(time * 3)));
       else if (this.type === 'reactor') ec.multiplyScalar(0.75 + 0.25 * Math.sin(time * 1.4));
+      else if (this.type === 'sabatier') {
+        // flame-coloured core: burns methane at night or with a low battery, otherwise a dim pilot light
+        const burning = ctx.nightK > 0.5 || ctx.batteryFrac < 0.2;
+        ec.multiplyScalar(burning ? 0.85 + 0.15 * Math.sin(time * 7) : 0.2);
+      }
     }
 
     // battery gauge

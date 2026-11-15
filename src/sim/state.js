@@ -1,6 +1,6 @@
 // Initial state (Apêndice A.3 + B). Plain JSON data only.
 import { TAU_CLEAR, TRANSIT_DOSE_MSV } from '../data/constants.js';
-import { TIME, SLOTS, START, SHIP, COLONIST_NAMES, MODULES, DIFFICULTY, PROFESSIONS } from '../data/balance.js';
+import { TIME, SLOTS, START, SHIP, COLONIST_NAMES, MODULES, DIFFICULTY, PROFESSIONS, oldSlotToNew } from '../data/balance.js';
 import { seedToUint32, random } from './rng.js';
 import { CHAPTERS, STORY_FEATURES } from '../data/story.js';
 
@@ -95,8 +95,32 @@ export function createInitialState({ mode = 'colony', chapter = 0, seed, difficu
   return state;
 }
 
+/**
+ * Apêndice E.1: a save with the old 4x4 map (16 slots) gets the 36-slot map; each module keeps its old
+ * cell shifted by (+1, +1). Slot ids stored elsewhere (assignments, shed times, scheduled events) follow.
+ */
+function migrateSlots(state) {
+  if (!Array.isArray(state.slots) || state.slots.length >= SLOTS.length) return;
+  const byId = new Map(state.slots.map((s) => [s.id, s]));
+  const fresh = SLOTS.map((s) => ({ id: s.id, gx: s.gx, gz: s.gz, module: null }));
+  for (const [oldId, old] of byId) {
+    if (!old.module) continue;
+    const target = fresh.find((s) => s.gx === old.gx + 1 && s.gz === old.gz + 1) || fresh.find((s) => s.id === oldSlotToNew(oldId));
+    if (target) target.module = old.module;
+  }
+  state.slots = fresh;
+  for (const c of state.colonists || []) if (c.assignedTo) c.assignedTo = oldSlotToNew(c.assignedTo);
+  if (state.sim && state.sim.shedAt) {
+    const shed = {};
+    for (const [k, v] of Object.entries(state.sim.shedAt)) shed[oldSlotToNew(k)] = v;
+    state.sim.shedAt = shed;
+  }
+  for (const e of state.events?.scheduled || []) if (e.params && e.params.slotId) e.params.slotId = oldSlotToNew(e.params.slotId);
+}
+
 /** Fill fields added after version 1 so older saves keep loading. Mutates and returns the state. */
 export function migrateState(state) {
+  migrateSlots(state);
   if (!state.difficulty) state.difficulty = 'commander';
   if (state.realSun === undefined) state.realSun = null;
   if (!state.unlocked.features) state.unlocked.features = [...STORY_FEATURES];

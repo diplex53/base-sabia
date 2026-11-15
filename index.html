@@ -28,14 +28,21 @@
       </section>
     </div>
 
-    <section id="slot-panel" class="panel" aria-labelledby="h-slot">
-      <h2 id="h-slot" data-i18n="ui.slotPanel">Módulo</h2>
-      <div class="panel-body"></div>
-    </section>
+    <div id="right-stack">
+      <section id="city-panel" class="panel" aria-labelledby="h-city" hidden>
+        <h2 id="h-city" data-i18n="ui.cityTitle">Cidade</h2>
+        <div class="panel-body"></div>
+      </section>
+      <section id="slot-panel" class="panel" aria-labelledby="h-slot">
+        <h2 id="h-slot" data-i18n="ui.slotPanel">Módulo</h2>
+        <div class="panel-body"></div>
+      </section>
+    </div>
 
     <nav id="sheet-tabs" data-i18n-aria="ui.tabs" aria-label="Painéis">
       <button type="button" data-tab="base" aria-pressed="false" data-i18n="ui.tabBase">Base</button>
       <button type="button" data-tab="colonists" aria-pressed="false" data-i18n="ui.tabColonists">Colonos</button>
+      <button type="button" data-tab="city" aria-pressed="false" data-i18n="ui.cityBtn" hidden>Cidade</button>
       <button type="button" data-tab="slot" aria-pressed="false" data-i18n="ui.tabModule">Módulo</button>
     </nav>
   </div>

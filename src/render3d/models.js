@@ -475,7 +475,394 @@ function reactor(L) {
   return { boxes: o, meta: {} };
 }
 
-const BUILDERS = { habitat, solar, battery, moxie, extractor, greenhouse, shelter, reactor };
+// ---------- Apêndice E.2: expansion modules ----------
+
+// Horizontal cylinder along x (stepped cross-section): x0..x0+len, centre (cy, cz).
+function hcyl(o, x0, len, cy, cz, r, c, grow = 0) {
+  const n = Math.max(1, Math.ceil((r * 2) / 0.5 - 1e-6));
+  for (let i = 0; i < n; i++) {
+    const yc = -r + (i + 0.5) * 0.5;
+    const hw = Math.max(0.25, Math.sqrt(Math.max(0, r * r - yc * yc)));
+    o.push([x0 - grow, cy + yc - 0.25, cz - hw - grow, len + grow * 2, 0.5, hw * 2 + grow * 2, c]);
+  }
+}
+
+// Stepped sphere.
+function sphere(o, cx, cy, cz, r, c) {
+  const n = Math.ceil((r * 2) / 0.5);
+  for (let i = 0; i < n; i++) {
+    const yc = -r + (i + 0.5) * 0.5;
+    const rr = Math.sqrt(Math.max(0, r * r - yc * yc));
+    if (rr > 0.3) disc(o, cx, cy + yc - 0.25, cz, rr, 0.5, c, { step: 0.5 });
+  }
+}
+
+// fallback for unknown module types: plain gray box
+function generic() {
+  const o = [];
+  o.push([0.8, 0, 0.8, 6.4, 0.3, 6.4, 'steel']);
+  o.push([1, 0.3, 1, 6, 2.4, 6, 'hullDark']);
+  o.push([0.9, 2.7, 0.9, 6.2, 0.3, 6.2, 'steel']);
+  o.push([3.4, 0.3, 7.0, 1.2, 1.6, 0.1, 'dark']);
+  o.push([3.75, 2.2, 7.0, 0.5, 0.2, 0.12, 'led']);
+  return { boxes: o, meta: {} };
+}
+
+// gym: blue-gray box, striped roof, big windows
+function gym(L) {
+  const o = [];
+  const H = [2.6, 3.2, 3.2][L - 1];
+  o.push([0.3, 0, 0.8, 7.4, 0.3, 6.4, 'gymDark']);
+  o.push([0.5, 0.3, 1, 7, H, 6, 'gymBody']);
+  for (let i = 0; i < 7; i++) o.push([0.4 + i, 0.3 + H, 0.9, 1, 0.22, 6.2, i % 2 ? 'accent' : 'hull']);
+  for (const x of [1.0, 4.9]) o.push([x, 0.9, 6.97, 2.1, H - 1.2, 0.12, 'win']);
+  o.push([3.45, 0.3, 6.97, 1.1, 1.8, 0.12, 'dark']);
+  for (const z of [1.7, 4.3]) o.push([7.47, 0.9, z, 0.12, H - 1.2, 1.9, 'win']);
+  o.push([6.2, 0.52 + H, 5.4, 1.2, 0.6, 1.2, 'steel']);
+  const top = 0.52 + H;
+  if (L >= 2) {
+    o.push([2.6, top + 0.75, 3.9, 2.8, 0.2, 0.2, 'steel']);   // dumbbell sign
+    for (const x of [2.3, 5.2]) o.push([x, top + 0.45, 3.8, 0.5, 0.8, 0.4, 'dark']);
+    o.push([3.7, top, 3.9, 0.2, 0.75, 0.2, 'metal']);
+  }
+  if (L === 3) {
+    o.push([1.4, top, 1.8, 4.8, 1.7, 3.2, 'gymBody']);
+    o.push([1.5, top + 0.5, 5.0, 4.6, 0.7, 0.1, 'win']);
+    o.push([1.3, top + 1.7, 1.7, 5, 0.22, 3.4, 'accent']);
+  }
+  return { boxes: o, meta: {} };
+}
+
+// hospital: white block with a plain coloured band, canopy
+function hospital(L) {
+  const o = [];
+  const H = [2.8, 3.6, 4.6][L - 1];
+  o.push([0.4, 0, 0.8, 7.2, 0.3, 6.6, 'hull2']);
+  o.push([0.6, 0.3, 1, 6.8, H, 6.2, 'hull']);
+  o.push([0.5, 0.3 + H * 0.5, 0.9, 7, 0.55, 6.4, 'accent']);
+  for (let i = 0; i < 3; i++) o.push([1.2 + i * 2.0, 0.4 + H * 0.5 + 0.9, 7.17, 1.2, 0.7, 0.1, 'win']);
+  if (H > 3) for (let i = 0; i < 3; i++) o.push([1.2 + i * 2.0, 0.4, 7.17, 1.2, 0.8, 0.1, 'win']);
+  o.push([3.2, 0.3, 7.17, 1.6, 1.7, 0.1, 'dark']);
+  o.push([2.8, 2.1, 7.2, 2.4, 0.2, 0.9, 'hull2']);
+  for (const x of [2.9, 4.9]) o.push([x, 0.3, 7.9, 0.2, 1.8, 0.2, 'metal']);
+  o.push([0.5, 0.3 + H, 0.9, 7, 0.22, 6.4, 'hull2']);
+  const top = 0.52 + H;
+  if (L === 1) o.push([5.4, top, 2.2, 1.6, 0.8, 1.4, 'steel']);
+  if (L === 2) {
+    o.push([0.2, 0.3, 2.4, 0.5, 2.4, 3.2, 'hull']);
+    o.push([5.6, top, 2.0, 1.5, 0.8, 1.5, 'steel']);
+    o.push([1.0, top, 5.4, 0.3, 1.2, 0.3, 'metal']);
+    o.push([0.9, top + 1.2, 5.3, 0.5, 0.2, 0.5, 'led']);
+  }
+  if (L === 3) {
+    disc(o, 4, top, 4, 2.7, 0.2, 'concrete', { step: 0.5 });   // rooftop helipad
+    o.push([3.0, top + 0.2, 3.7, 2.0, 0.05, 0.6, 'yellow']);
+    o.push([3.0, top + 0.2, 4.9, 2.0, 0.05, 0.6, 'yellow']);
+    o.push([3.7, top + 0.2, 3.1, 0.6, 0.05, 2.6, 'yellow']);
+    for (const [px, pz] of [[1.5, 1.5], [6.2, 1.5], [1.5, 6.2], [6.2, 6.2]]) o.push([px, top, pz, 0.3, 0.3, 0.3, 'led']);
+  }
+  return { boxes: o, meta: {} };
+}
+
+// thermal: central unit, big radiator fins, red/blue pipes
+function thermal(L) {
+  const o = [];
+  const nf = [6, 8, 9][L - 1];
+  const fh = [3.2, 4.0, 4.8][L - 1];
+  o.push([0.3, 0, 0.3, 7.4, 0.3, 7.4, 'steel']);
+  o.push([0.6, 0.3, 2.4, 3.2, 2.2, 3.2, 'hull2']);
+  o.push([0.5, 2.5, 2.3, 3.4, 0.3, 3.4, 'accent']);
+  o.push([1.2, 0.3, 5.6, 1.6, 1.0, 0.1, 'dark']);
+  o.push([1.5, 2.8, 3.4, 1.0, 0.6, 1.0, 'steel']);
+  for (let i = 0; i < nf; i++) o.push([4.4 + i * 0.4, 0.5, 1.2, 0.2, fh, 5.6, 'fin']);
+  o.push([4.3, 0.5 + fh, 1.1, nf * 0.4 + 0.2, 0.25, 5.8, 'finDark']);
+  o.push([4.3, 0.3, 1.1, nf * 0.4 + 0.2, 0.2, 5.8, 'finDark']);
+  o.push([3.8, 1.0, 3.0, 4.2, 0.3, 0.3, 'red']);
+  o.push([3.8, 1.5, 4.7, 4.2, 0.3, 0.3, 'blue']);
+  o.push([3.8, 1.0, 3.0, 0.3, 0.3, 1.9, 'red']);
+  o.push([3.6, 1.5, 4.6, 0.3, 0.3, 0.4, 'blue']);
+  if (L >= 2) {
+    o.push([0.6, 0.3, 0.6, 1.6, 1.4, 1.5, 'hull2']);
+    o.push([1.0, 1.7, 1.0, 0.8, 0.5, 0.8, 'steel']);
+    o.push([2.2, 0.9, 1.3, 2.2, 0.3, 0.3, 'blue']);
+  }
+  if (L === 3) {
+    for (let i = 0; i < 5; i++) o.push([0.5 + i * 0.5, 2.8, 6.2, 0.2, 2.2, 1.6, 'fin']);
+    o.push([2.4, 5.0, 6.1, 0.3, 0.25, 1.8, 'finDark']);
+    o.push([2.7, 1.0, 5.9, 0.3, 0.3, 1.2, 'red']);
+  }
+  return { boxes: o, meta: {} };
+}
+
+// pressurizer: horizontal pressure tanks with a compressor
+function pressurizer(L) {
+  const o = [];
+  const zs = L === 1 ? [2.5, 5.5] : [1.4, 3.7, 6.0];
+  const r = L === 1 ? 1.1 : 1.0;
+  o.push([0.3, 0, 0.3, 7.4, 0.3, 7.4, 'steel']);
+  for (const z of zs) {
+    for (const x of [1.2, 4.8]) o.push([x, 0.3, z - 0.6, 0.5, r * 0.5 + 0.2, 1.2, 'dark']);
+    hcyl(o, 0.6, 5.8, 0.3 + r + 0.2, z, r, 'tank');
+    for (const x of [1.5, 4.9]) hcyl(o, x, 0.35, 0.3 + r + 0.2, z, r, 'tankBlue', 0.06);
+    hcyl(o, 6.4, 0.3, 0.3 + r + 0.2, z, r * 0.45, 'metal');
+  }
+  if (L === 3) {
+    hcyl(o, 1.0, 5.0, 0.3 + r * 2 + 1.1, 2.55, 0.9, 'tank');
+    hcyl(o, 2.4, 0.35, 0.3 + r * 2 + 1.1, 2.55, 0.9, 'tankBlue', 0.06);
+  }
+  o.push([6.8, 0.3, 1.0, 1.0, 2.4, 6.0, 'hullDark']);   // compressor
+  o.push([6.7, 2.7, 0.9, 1.2, 0.25, 6.2, 'accent']);
+  o.push([6.75, 0.8, 1.5, 0.12, 0.2, 5.0, 'dark']);
+  o.push([6.75, 1.4, 1.5, 0.12, 0.2, 5.0, 'dark']);
+  o.push([7.0, 2.95, 3.6, 0.5, 0.25, 0.5, 'led']);
+  return { boxes: o, meta: {} };
+}
+
+// waterFilter: tall blue cylinders with pipes
+function waterFilter(L) {
+  const o = [];
+  const h = [4.5, 5.5, 6.5][L - 1];
+  const pts = L === 1 ? [[2.3, 2.3], [5.7, 2.3]] : L === 2 ? [[2.1, 2.1], [5.9, 2.1], [4.0, 5.9]] : [[2.1, 2.1], [5.9, 2.1], [2.1, 5.9], [5.9, 5.9]];
+  const r = L === 1 ? 1.3 : 1.2;
+  o.push([0.3, 0, 0.3, 7.4, 0.3, 7.4, 'steel']);
+  for (const [x, z] of pts) {
+    disc(o, x, 0.3, z, r, h, 'tankBlue', { step: 0.5 });
+    disc(o, x, 0.3 + h * 0.3, z, r, 0.3, 'tank', { step: 0.5, grow: 0.06 });
+    disc(o, x, 0.3 + h * 0.7, z, r, 0.3, 'tank', { step: 0.5, grow: 0.06 });
+    disc(o, x, 0.3 + h, z, r * 0.7, 0.35, 'steel', { step: 0.5 });
+    o.push([x - 0.15, 0.65 + h, z - 0.15, 0.3, 0.5, 0.3, 'led']);
+  }
+  const y = 1.0;
+  const a = pts[0], b = pts[1];
+  o.push([a[0], y, a[1] - 0.15, b[0] - a[0], 0.3, 0.3, 'metal']);
+  if (L === 1) {
+    o.push([2.0, 0.3, 5.0, 4.0, 1.5, 2.2, 'hull2']);
+    o.push([2.2, 1.8, 5.2, 1.0, 0.5, 1.0, 'steel']);
+    o.push([3.7, y, 3.5, 0.3, 0.3, 1.6, 'metal']);
+  } else if (L === 2) {
+    o.push([b[0] - 0.15, y, b[1], 0.3, 0.3, 3.9, 'metal']);
+    o.push([4.0, y, 5.75, 1.9, 0.3, 0.3, 'metal']);
+    o.push([0.6, 0.3, 4.6, 1.5, 1.4, 2.4, 'hull2']);
+  } else {
+    o.push([2.1, y, 5.75, 3.8, 0.3, 0.3, 'metal']);
+    o.push([1.95, y, 2.1, 0.3, 0.3, 3.8, 'metal']);
+    o.push([5.75, y, 2.1, 0.3, 0.3, 3.8, 'metal']);
+    o.push([2.1, 0.3 + h + 0.9, 1.95, 3.8, 0.3, 0.3, 'metal']);
+    o.push([2.1, 0.3 + h + 0.9, 5.75, 3.8, 0.3, 0.3, 'metal']);
+    o.push([3.85, 0.3, 3.7, 0.5, 2.6, 0.5, 'aqua']);
+  }
+  return { boxes: o, meta: {} };
+}
+
+// decon: airlock tunnel with yellow stripes
+function tunnelX(o, x0, len, z0, w) {
+  o.push([x0, 0.3, z0, len, 1.8, w, 'hull2']);
+  o.push([x0, 2.1, z0 + 0.4, len, 0.6, w - 0.8, 'hull2']);
+  o.push([x0, 2.7, z0 + 1.0, len, 0.5, w - 2.0, 'hull2']);
+  for (let i = 0; i + 0.8 <= len; i++) {
+    const c = i % 2 ? 'black' : 'yellow';
+    const x = x0 + 0.3 + i * 1.0;
+    o.push([x, 0.3, z0 - 0.06, 0.5, 1.8, w + 0.12, c]);
+    o.push([x, 2.1, z0 + 0.34, 0.5, 0.6, w - 0.68, c]);
+    o.push([x, 2.7, z0 + 0.94, 0.5, 0.5, w - 1.88, c]);
+  }
+  return z0 + w / 2;
+}
+
+function decon(L) {
+  const o = [];
+  o.push([0.2, 0, 0.5, 7.6, 0.3, 7.0, 'steel']);
+  const len = [5, 7, 7][L - 1];
+  const x0 = L === 1 ? 1.5 : 0.5;
+  const zm = tunnelX(o, x0, len, 2.3, 3.4);
+  o.push([x0 - 0.1, 0.3, zm - 1.1, 0.12, 1.8, 2.2, 'dark']);
+  o.push([x0 + len - 0.02, 0.3, zm - 1.1, 0.12, 1.8, 2.2, 'dark']);
+  o.push([x0 + len - 0.1, 2.5, zm - 0.3, 0.2, 0.25, 0.6, 'led']);
+  if (L >= 2) {
+    o.push([x0 + 1.5, 3.2, zm - 0.2, len - 3, 0.2, 0.4, 'steel']);   // shower rail
+    for (let i = 0; i < 4; i++) o.push([x0 + 2 + i * 1.0, 3.0, zm - 0.1, 0.2, 0.2, 0.2, 'tankBlue']);
+    o.push([x0 + 0.5, 0.3, 5.9, 1.5, 1.2, 1.3, 'hullDark']);
+  }
+  if (L === 3) {
+    o.push([3.3, 0.3, 0.6, 1.6, 1.8, 1.7, 'hull2']);   // cross passage
+    o.push([3.3, 0.3, 5.7, 1.6, 1.8, 1.7, 'hull2']);
+    for (let i = 0; i < 2; i++) {
+      const c = i % 2 ? 'black' : 'yellow';
+      o.push([3.24, 0.3, 0.8 + i * 0.7, 1.72, 1.8, 0.4, c]);
+      o.push([3.24, 0.3, 5.9 + i * 0.7, 1.72, 1.8, 0.4, c]);
+    }
+    o.push([3.9, 0.3, 0.5, 0.5, 1.4, 0.12, 'dark']);
+  }
+  return { boxes: o, meta: {} };
+}
+
+// warehouse: large low gray shed
+function warehouse(L) {
+  const o = [];
+  const H = [2.2, 2.6, 3.0][L - 1];
+  o.push([0.2, 0, 0.4, 7.6, 0.25, 7.2, 'shedDark']);
+  o.push([0.4, 0.25, 0.6, 7.2, H, 6.8, 'shed']);
+  for (let i = 0; i < 8; i++) o.push([0.35 + i * 1.0, 0.25, 0.55, 0.2, H, 6.9, 'shedDark']);
+  o.push([0.3, 0.25 + H, 0.5, 7.4, 0.25, 7.0, 'shedDark']);
+  o.push([1.0, 0.5 + H, 1.2, 6, 0.3, 5.6, 'shed']);
+  o.push([2.0, 0.8 + H, 2.2, 4, 0.25, 3.6, 'shedDark']);
+  const nd = L === 1 ? 1 : 2;
+  for (let d = 0; d < nd; d++) {
+    const x = nd === 1 ? 2.8 : 0.9 + d * 3.6;
+    const w = nd === 1 ? 2.8 : 2.6;
+    o.push([x, 0.25, 7.38, w, H - 0.5, 0.12, 'dark']);
+    for (let k = 0; k < 4; k++) o.push([x, 0.6 + k * (H - 1) / 4, 7.46, w, 0.1, 0.1, 'shedDark']);
+    o.push([x + w / 2 - 0.25, H - 0.2, 7.5, 0.5, 0.2, 0.1, 'led']);
+  }
+  if (L === 3) {
+    o.push([0.5, 0.25, 7.6, 7, 0.3, 0.4, 'concrete']);
+    for (const [x, z, c] of [[0.1, 1.0, 'orange'], [0.1, 2.3, 'sandbag'], [7.1, 3.0, 'orange']]) o.push([x, 0.25, z, 0.8, 0.8, 1.0, c]);
+  }
+  return { boxes: o, meta: {} };
+}
+
+// factory: block with chimney stacks and a conveyor
+function factory(L) {
+  const o = [];
+  const H = [2.8, 3.4, 3.8][L - 1];
+  o.push([0.2, 0, 0.3, 7.6, 0.3, 7.4, 'steel']);
+  o.push([0.5, 0.3, 2.6, 4.6, H, 4.8, 'hullDark']);
+  o.push([0.4, 0.3 + H, 2.5, 4.8, 0.3, 5.0, 'dark']);
+  for (let i = 0; i < 4; i++) o.push([0.7 + i * 1.1, 0.6 + H, 3.0, 0.7, 0.5, 4.0, 'steel']);
+  o.push([0.8, 0.9, 7.38, 1.4, 1.2, 0.1, 'win']);
+  o.push([3.3, 0.3, 7.38, 1.4, 1.8, 0.1, 'dark']);
+  o.push([0.5, 0.3 + H * 0.55, 7.36, 4.6, 0.3, 0.1, 'yellow']);
+  const ns = [2, 3, 4][L - 1];
+  for (let i = 0; i < ns; i++) {
+    const x = 1.1 + i * 1.2;
+    const sh = 2.6 + (i % 2) * 0.8 + L * 0.6;
+    disc(o, x, 0.3 + H + 0.3, 1.6, 0.5, sh, 'hull2', { step: 0.5 });
+    disc(o, x, 0.3 + H + 0.3 + sh * 0.7, 1.6, 0.5, 0.3, 'red', { step: 0.5, grow: 0.05 });
+    disc(o, x, 0.3 + H + 0.3 + sh, 1.6, 0.4, 0.2, 'black', { step: 0.5 });
+  }
+  o.push([0.5, 0.3 + H, 1.2, ns * 1.2 + 0.2, 0.3, 0.9, 'dark']);
+  for (let i = 0; i < 6; i++) {   // conveyor along the east side, rising into the building
+    const x = 5.2 + i * 0.45;
+    o.push([x, 0.5 + i * 0.28, 3.2, 0.5, 0.18, 2.6, 'dark']);
+    o.push([x, 0.5 + i * 0.28 + 0.18, 3.2, 0.5, 0.1, 0.12, 'yellow']);
+    o.push([x, 0.5 + i * 0.28 + 0.18, 5.68, 0.5, 0.1, 0.12, 'yellow']);
+  }
+  for (const x of [5.4, 6.8, 7.4]) o.push([x, 0.3, 4.3, 0.22, 0.5 + (x - 5.2) * 0.62, 0.22, 'metal']);
+  o.push([6.4, 1.6, 4.1, 0.6, 0.35, 0.5, 'regolith']);
+  o.push([7.0, 1.95, 4.5, 0.5, 0.3, 0.5, 'regolith2']);
+  o.push([6.9, 0.3, 6.3, 1.1, 0.7, 1.1, 'regolith']);
+  if (L >= 2) o.push([5.4, 0.3, 0.8, 2.3, 1.6, 1.6, 'orangeDark']);
+  if (L === 3) {
+    o.push([5.2, 1.9, 0.9, 2.5, 0.2, 1.4, 'orange']);
+    o.push([5.4, 0.3, 6.5, 0.8, 0.8, 0.8, 'tank']);
+  }
+  return { boxes: o, meta: {} };
+}
+
+// sabatier: two tanks with a flame-coloured core light (core keys glow while the module is active)
+function sabatier(L) {
+  const o = [];
+  const r = [1.4, 1.6, 1.7][L - 1];
+  o.push([0.3, 0, 0.3, 7.4, 0.3, 7.4, 'steel']);
+  const cy = 0.3 + 0.9 + r;
+  sphere(o, 1.9, cy, 2.1, r, 'tank');
+  disc(o, 1.9, cy - 0.15, 2.1, r, 0.3, 'orange', { step: 0.5, grow: 0.06 });
+  for (const [px, pz] of [[-0.8, -0.8], [0.8, -0.8], [-0.8, 0.8], [0.8, 0.8]]) o.push([1.9 + px - 0.12, 0.3, 2.1 + pz - 0.12, 0.24, 1.0, 0.24, 'dark']);
+  if (L === 1) {
+    for (const [px, pz] of [[-0.8, -0.8], [0.8, -0.8], [-0.8, 0.8], [0.8, 0.8]]) o.push([1.9 + px - 0.12, 0.3, 5.9 + pz - 0.12, 0.24, 1.0, 0.24, 'dark']);
+    sphere(o, 1.9, cy, 5.9, r, 'tank');
+    disc(o, 1.9, cy - 0.15, 5.9, r, 0.3, 'orange', { step: 0.5, grow: 0.06 });
+  } else {
+    const th = 3.4 + L * 0.4;
+    disc(o, 1.9, 0.3, 5.9, r, th, 'tank', { step: 0.5 });
+    disc(o, 1.9, 1.5, 5.9, r, 0.35, 'orange', { step: 0.5, grow: 0.06 });
+    disc(o, 1.9, 0.3 + th, 5.9, r * 0.6, 0.3, 'steel', { step: 0.5 });
+  }
+  o.push([4.4, 0.3, 2.6, 3.2, 3.0, 2.8, 'orangeDark']);   // reactor unit (the lit part)
+  o.push([4.3, 3.3, 2.5, 3.4, 0.25, 3.0, 'steel']);
+  o.push([6.05, 0.9, 3.4, 0.12, 1.9, 1.2, 'core']);
+  o.push([4.7, 0.9, 5.38, 2.4, 1.6, 0.12, 'core']);
+  disc(o, 6.0, 3.55, 4.0, 0.5, 1.4, 'steel', { step: 0.5 });
+  o.push([5.7, 4.95, 3.7, 0.6, 0.5, 0.6, 'core']);
+  o.push([3.4, 1.0, 2.0, 1.1, 0.3, 0.3, 'metal']);
+  o.push([3.4, 1.0, 5.8, 1.1, 0.3, 0.3, 'metal']);
+  o.push([3.4, 1.0, 2.0, 0.3, 0.3, 3.9, 'metal']);
+  if (L === 3) {
+    o.push([6.4, 0.3, 6.2, 1.2, 1.2, 1.2, 'hull2']);
+    o.push([6.8, 1.5, 6.6, 0.4, 0.3, 0.4, 'led']);
+  }
+  return { boxes: o, meta: {} };
+}
+
+// mine: drill rig over a pit, ore piles, tiny robots
+function mine(L) {
+  const o = [];
+  const gh = [4.8, 6.0, 7.2][L - 1];
+  o.push([0.2, 0, 0.2, 7.6, 0.2, 7.6, 'regolith2']);
+  o.push([2.0, 0.2, 2.0, 4.0, 0.05, 4.0, 'black']);   // pit floor inside a raised rim
+  o.push([1.6, 0.2, 1.6, 4.8, 0.45, 0.5, 'regolith']);
+  o.push([1.6, 0.2, 5.9, 4.8, 0.45, 0.5, 'regolith']);
+  o.push([1.6, 0.2, 2.1, 0.5, 0.45, 3.8, 'regolith']);
+  o.push([5.9, 0.2, 2.1, 0.5, 0.45, 3.8, 'regolith']);
+  for (const [x, z] of [[2.2, 2.2], [5.4, 2.2], [2.2, 5.4], [5.4, 5.4]]) o.push([x, 0.2, z, 0.4, gh, 0.4, 'yellow']);
+  for (let y = 1.4; y < gh - 0.3; y += 1.6) {
+    o.push([2.2, y, 2.2, 3.6, 0.2, 0.2, 'black']);
+    o.push([2.2, y, 5.4, 3.6, 0.2, 0.2, 'black']);
+    o.push([2.2, y, 2.2, 0.2, 0.2, 3.6, 'black']);
+    o.push([5.6, y, 2.2, 0.2, 0.2, 3.6, 'black']);
+  }
+  o.push([2.0, gh, 2.0, 4.0, 0.5, 4.0, 'hullDark']);
+  o.push([3.4, gh + 0.5, 3.4, 1.2, 0.8, 1.2, 'steel']);
+  o.push([3.8, gh + 1.3, 3.8, 0.4, 0.4, 0.4, 'led']);
+  o.push([3.75, 0.25, 3.75, 0.5, gh - 0.2, 0.5, 'metal']);   // drill rod
+  o.push([3.55, 0.25, 3.55, 0.9, 0.5, 0.9, 'steel']);
+  o.push([0.4, 0.2, 0.5, 1.4, 0.8, 1.3, 'regolith']);
+  o.push([0.7, 1.0, 0.7, 0.8, 0.5, 0.7, 'regolith2']);
+  o.push([6.5, 0.2, 6.5, 1.2, 0.7, 1.2, 'crystal']);
+  if (L >= 2) o.push([6.4, 0.2, 0.4, 1.3, 0.9, 1.4, 'regolith']);
+  if (L === 3) { o.push([0.5, 0.2, 6.4, 1.2, 0.6, 1.2, 'crystal']); o.push([6.6, 0.9, 6.7, 0.6, 0.5, 0.6, 'crystal']); }
+  const robots = L === 1 ? [[0.5, 3.2]] : L === 2 ? [[0.5, 3.2], [6.8, 3.6]] : [[0.5, 3.2], [6.8, 3.6], [4.0, 6.9]];
+  for (const [x, z] of robots) {
+    o.push([x, 0.2, z, 0.9, 0.35, 0.7, 'wheel']);
+    o.push([x + 0.05, 0.55, z + 0.05, 0.8, 0.4, 0.6, 'hull2']);
+    o.push([x + 0.55, 0.95, z + 0.2, 0.2, 0.2, 0.2, 'led']);
+  }
+  return { boxes: o, meta: {} };
+}
+
+// radShield: ring of dark panels (kept simple)
+function radShield(L) {
+  const o = [];
+  const h = [3, 4, 5][L - 1];
+  o.push([0.8, 0, 0.8, 6.4, 0.25, 6.4, 'steel']);
+  for (const [x, z, w, d] of [[1.0, 0.9, 2.4, 0.4], [4.6, 0.9, 2.4, 0.4], [1.0, 6.7, 2.4, 0.4], [4.6, 6.7, 2.4, 0.4],
+    [0.9, 1.0, 0.4, 2.4], [0.9, 4.6, 0.4, 2.4], [6.7, 1.0, 0.4, 2.4], [6.7, 4.6, 0.4, 2.4]]) {
+    o.push([x, 0.25, z, w, h, d, 'dark']);
+    o.push([x - 0.05, h + 0.25, z - 0.05, w + 0.1, 0.2, d + 0.1, 'frame']);
+    o.push([x - 0.02, 1.2, z - 0.02, w + 0.04, 0.2, d + 0.04, 'accent']);
+  }
+  o.push([3.6, 0.25, 3.6, 0.8, h + 0.6, 0.8, 'hullDark']);
+  o.push([3.4, h + 0.85, 3.4, 1.2, 0.3, 1.2, 'steel']);
+  o.push([3.8, h + 1.15, 3.8, 0.4, 0.4, 0.4, 'led']);
+  return { boxes: o, meta: {} };
+}
+
+// dome: the slot shows a small control base; the big shell is drawn by dome.js
+function domeBase() {
+  const o = [];
+  disc(o, 4, 0, 4, 3.6, 0.35, 'concrete', { step: 0.5 });
+  disc(o, 4, 0.35, 4, 3.0, 0.2, 'frame', { step: 0.5 });
+  for (const [px, pz] of [[1.2, 1.2], [6.5, 1.2], [1.2, 6.5], [6.5, 6.5]]) {
+    o.push([px, 0.35, pz, 0.3, 1.6, 0.3, 'metal']);
+    o.push([px - 0.05, 1.95, pz - 0.05, 0.4, 0.2, 0.4, 'led']);
+  }
+  disc(o, 4, 0.55, 4, 1.6, 0.8, 'hull2', { step: 0.5 });
+  disc(o, 4, 1.35, 4, 1.1, 0.5, 'glass', { step: 0.5 });
+  disc(o, 4, 1.85, 4, 0.6, 0.4, 'glass', { step: 0.5 });
+  return { boxes: o, meta: {} };
+}
+
+const BUILDERS = { habitat, solar, battery, moxie, extractor, greenhouse, shelter, reactor, gym, hospital, thermal, pressurizer, waterFilter, decon, warehouse, factory, sabatier, mine, dome: domeBase, radShield };
 
 export const MODULE_TYPES = Object.keys(BUILDERS);
 
@@ -490,8 +877,10 @@ for (const type of MODULE_TYPES) {
   });
 }
 
+MODELS.__generic = [1, 2, 3].map(() => { const m = generic(); let top = 0; for (const b of m.boxes) top = Math.max(top, b[1] + b[4]); m.meta.height = top; return m; });
+
 export function getModel(type, level) {
-  const list = MODELS[type];
+  const list = MODELS[type] || MODELS.__generic;   // unknown module types: generic gray box
   if (!list) return null;
   return list[Math.min(3, Math.max(1, level | 0)) - 1];
 }

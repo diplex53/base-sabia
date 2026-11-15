@@ -607,3 +607,47 @@ body.is-launch #hud,body.is-launch #story-card { visibility: hidden; pointer-eve
 .prog-list li.ok { color: var(--ok); }
 .mod-head .sci-btn { min-width: 32px; min-height: 32px; width: 32px; height: 32px; padding: 0; font-size: 15px; margin-left: auto; }
 .launch-ara, .scene-ara { color: var(--muted); }
+
+/* ---- Appendix E: right stack (City + module), 6x6 grid, health, sections */
+#right-stack { grid-column: 3; grid-row: 2; display: flex; flex-direction: column; gap: 12px; min-height: 0; align-self: stretch; padding-bottom: 74px; pointer-events: none; }
+#right-stack > .panel { pointer-events: auto; }
+#right-stack > #slot-panel { grid-column: auto; flex: 1 1 auto; max-height: none; min-height: 120px; align-self: stretch; }
+#right-stack > #city-panel { flex: 0 0 auto; max-height: 46%; padding: 12px 14px; }
+#city-panel[hidden] { display: none; }
+#city-panel.is-collapsed .panel-body { display: none; }
+.city-row { margin: 5px 0; }
+.city-line { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--muted); }
+.city-line strong { color: var(--text); font-weight: 650; }
+.city-line .num { color: var(--text); }
+.city-h { font-size: 10px; text-transform: uppercase; letter-spacing: .14em; color: #bdd0dc; margin: 10px 0 2px; font-weight: 650; }
+.city-row .bar { margin: 3px 0 0; height: 5px; }
+.bar.health > i { background: var(--ok); }
+.bar.health.low > i { background: var(--danger); }
+.bar.stock-o2 > i { background: #92dfe5; } .bar.stock-water > i { background: #6aa8ff; } .bar.stock-food > i { background: #9fd36b; }
+.bar.dome > i { background: var(--accent); }
+.city-dome { margin-top: 10px; border-top: 1px solid var(--border); padding-top: 6px; }
+.dome-list { list-style: none; padding: 0; margin: 4px 0; font-size: 12px; color: var(--muted); }
+.dome-list li { margin: 2px 0; }
+.city-dome[data-kind="done"] .city-h { color: var(--ok); }
+.chip-health { gap: 6px; }
+.chip-health .hbar { display: inline-block; width: 44px; height: 6px; border-radius: 4px; background: #91acbd33; overflow: hidden; }
+.chip-health .hbar > i { display: block; height: 100%; width: 0; background: var(--ok); }
+.chip-health.low .hbar > i { background: var(--danger); }
+.chip-health.mid .hbar > i { background: var(--warn); }
+.opt-sec { margin: 6px 0 12px; }
+.opt-sec-title { font-size: 10px; text-transform: uppercase; letter-spacing: .14em; color: var(--cyan); margin: 12px 0 2px; font-weight: 650; }
+.opt-sec .opt-list { margin: 0; }
+.v2d-big .v2d-grid { width: min(62vh, 44vw); gap: 4px; }
+.v2d-big .tile { padding: 4px; min-width: 0; overflow: hidden; }
+.v2d-big .tile-name { font-size: 9px; line-height: 1.15; }
+.v2d-big .tile-level, .v2d-big .tile-status, .v2d-big .tile-dust { font-size: 8px; }
+.milestone-dome { font-size: 16px; }
+@media (max-width: 819px) {
+  #right-stack { display: contents; padding: 0; }
+  #right-stack > #slot-panel, #right-stack > #city-panel { max-height: 38dvh; }
+  #city-panel { display: none; }
+  #hud[data-tab="city"] #city-panel:not([hidden]) { display: block; }
+  #sheet-tabs button[hidden] { display: none; }
+  .v2d-big .v2d-grid { width: min(94vw, 420px); }
+  .chip-health .hbar { width: 28px; }
+}

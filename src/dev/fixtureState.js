@@ -1,8 +1,9 @@
 // Fixture game states matching DESIGN.md Apêndice A.3, for developing the views without the core.
 // makeFixture(variant): 'start' | 'full' | 'night' | 'storm' | 'alert' | 'levels1' | 'levels2' | 'levels3'
+//   Expansion (6x6 grid, 36 slots): 'expansion' (one of each new type) | 'dome' (dome building at 0.5) | 'domeBuilt' (dome ok + radShield)
 //   Phase 3: 'spe' | 'spe2' (warning / active) | 'sheltering' | 'expedition' | 'ship' | 'shipland' | 'repairing'
 
-export const VARIANTS = ['start', 'full', 'night', 'storm', 'alert', 'levels1', 'levels2', 'levels3', 'spe', 'spe2', 'sheltering', 'expedition', 'ship', 'shipland', 'repairing'];
+export const VARIANTS = ['start', 'full', 'night', 'storm', 'alert', 'levels1', 'levels2', 'levels3', 'spe', 'spe2', 'sheltering', 'expedition', 'ship', 'shipland', 'repairing', 'expansion', 'dome', 'domeBuilt'];
 
 export function sunAt(t) {
   const f = ((t % 1) + 1) % 1;
@@ -29,9 +30,9 @@ function colonist(i, extra = {}) {
   };
 }
 
-function base(t) {
+function base(t, n = 4) {
   const slots = [];
-  for (let i = 0; i < 16; i++) slots.push({ id: 's' + (i + 1), gx: i % 4, gz: Math.floor(i / 4), module: null });
+  for (let i = 0; i < n * n; i++) slots.push({ id: 's' + (i + 1), gx: i % n, gz: Math.floor(i / n), module: null });
   return {
     version: 1, mode: 'colony', chapter: 0, seed: 12345, rng: 12345,
     t,
@@ -176,6 +177,32 @@ export function makeFixture(variant = 'start') {
       put(s, 's1', mod('extractor', 1, { status: 'repairing', progress: 0.4 }));
       put(s, 's16', mod('solar', 2, { status: 'repairing', progress: 0.7 }));
       put(s, 's12', mod('extractor', 3, { status: 'broken' }));
+      return s;
+    }
+    case 'expansion': {
+      const s = base(4.45, 6);
+      s.colonists = [1, 2, 3, 4, 5, 6].map((i) => colonist(i));
+      const L = [2, 1, 3, 2, 1, 3, 2, 3, 1, 2, 3];
+      const types = ['habitat', 'solar', 'battery', 'gym', 'hospital', 'thermal', 'pressurizer', 'waterFilter', 'decon', 'warehouse', 'factory', 'sabatier', 'mine', 'radShield'];
+      // row-major placement leaving a few empty pads
+      const spots = ['s8', 's9', 's10', 's14', 's15', 's16', 's20', 's21', 's22', 's26', 's27', 's28', 's32', 's33'];
+      types.forEach((type, i) => put(s, spots[i], mod(type, (i % 3) + 1)));
+      put(s, 's3', mod('moxie', 2)); put(s, 's4', mod('extractor', 2));
+      s.slots.find((x) => x.id === 's22').module.level = 1;
+      s.resources = { energy: 70, o2: 64, water: 120, food: 140, regolith: 35, parts: 22, science: 41, methane: 20 };
+      void L;
+      return s;
+    }
+    case 'dome': case 'domeBuilt': {
+      const s = base(4.45, 6);
+      s.colonists = [1, 2, 3, 4, 5].map((i) => colonist(i));
+      put(s, 's15', mod('habitat', 2)); put(s, 's16', mod('solar', 2)); put(s, 's21', mod('battery', 1));
+      put(s, 's9', mod('greenhouse', 2)); put(s, 's10', mod('moxie', 1)); put(s, 's22', mod('gym', 1));
+      put(s, 's27', mod('factory', 2)); put(s, 's28', mod('shelter', 1)); put(s, 's14', mod('extractor', 1));
+      put(s, 's18', mod('thermal', 1)); put(s, 's24', mod('warehouse', 1));
+      if (variant === 'dome') put(s, 's17', mod('dome', 1, { status: 'building', progress: 0.5 }));
+      else { put(s, 's17', mod('dome', 1)); put(s, 's23', mod('radShield', 1)); }
+      s.resources.energy = 18;
       return s;
     }
     default:

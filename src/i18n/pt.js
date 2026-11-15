@@ -1,3 +1,4 @@
+import p7 from './pt7.js';
 import p6 from './pt6.js';
 import p5 from './pt5.js';
 import p4 from './pt4.js';
@@ -254,4 +255,5 @@ export default {
   ...p4,
   ...p5,
   ...p6,
+  ...p7,
 };

@@ -1,7 +1,7 @@
 // Voxel heightfield terrain (diorama slab) + static props merged into one geometry.
 import { GeoBuilder, colorOf } from './voxels.js';
 import { garageBoxes, siteBoxes } from './models.js';
-import { CELL, PAD, PAD_H, TERRAIN_HALF, SITES, LANDING_PAD, GARAGE, cellCenter } from './layout.js';
+import { CELL, PAD, PAD_H, TERRAIN_HALF, SITES, LANDING_PAD, GARAGE, cellCenter, setGridSize } from './layout.js';
 import * as THREE from 'three';
 
 const BOTTOM = -7;
@@ -25,23 +25,24 @@ function vnoise(x, z) {
 function clamp01(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
 
 const CRATERS = [
-  { x: -30, z: 33, r: 6.5, d: 2.5 },
-  { x: 31, z: -33, r: 5.5, d: 2 },
-  { x: -40, z: 8, r: 4, d: 1.5 },
-  { x: 40, z: 40, r: 3.5, d: 1.2 },
-  { x: 8, z: -41, r: 3, d: 1 },
+  { x: -44, z: 22, r: 6.5, d: 2.5 },
+  { x: 38, z: -50, r: 5.5, d: 2 },
+  { x: -58, z: -6, r: 4, d: 1.5 },
+  { x: 56, z: 50, r: 3.5, d: 1.2 },
+  { x: 8, z: -56, r: 3, d: 1 },
 ];
 
 function sitePos() {
-  return SITES.map((s) => ({ id: s.id, ...cellCenter(s.gx, s.gz) }));
+  return SITES.map((s) => ({ id: s.id, x: s.x, z: s.z }));
 }
 
 // Flatness mask: 1 = flattened base area.
+let FLAT = 34;   // half extent of the flattened base area (grid half extent + margin)
 function flatMask(x, z, sites) {
-  const dx = Math.max(0, Math.abs(x) - 24);
-  const dz = Math.max(0, z < 0 ? -z - 24 : z - 38);
+  const dx = Math.max(0, Math.abs(x) - FLAT);
+  const dz = Math.max(0, z < 0 ? -z - FLAT : z - 58);
   let m = 1 - clamp01(Math.hypot(dx, dz) / 7);
-  if (z > 0 && Math.abs(x) > 24) m = Math.min(m, 1 - clamp01((Math.abs(x) - 24) / 7));
+  if (z > 0 && Math.abs(x) > FLAT) m = Math.min(m, 1 - clamp01((Math.abs(x) - FLAT) / 7));
   for (const s of sites) m = Math.max(m, 1 - clamp01((Math.hypot(x - s.x, z - s.z) - 5) / 4));
   return m;
 }
@@ -52,7 +53,10 @@ function segDist(px, pz, ax, az, bx, bz) {
   return Math.hypot(px - ax - vx * t, pz - az - vz * t);
 }
 
-export function buildTerrain() {
+export function buildTerrain(gridN = 4) {
+  setGridSize(gridN);
+  const gh = gridN * CELL / 2;
+  FLAT = Math.max(34, gh + 4);
   const N = TERRAIN_HALF * 2;
   const sites = sitePos();
   const H = new Float32Array(N * N);
@@ -65,7 +69,7 @@ export function buildTerrain() {
   const track = lin(0xa36c51);
 
   const routes = [
-    [GARAGE.x, GARAGE.z, 0, 22], [LANDING_PAD.x, LANDING_PAD.z, -5, 21],
+    [GARAGE.x, GARAGE.z, 6, gh + 1.5], [LANDING_PAD.x, LANDING_PAD.z, -6, gh + 1.5],
     ...sites.map((s) => [GARAGE.x, GARAGE.z, s.x, s.z]),
   ];
 
@@ -146,9 +150,9 @@ export function buildTerrain() {
     if (s > 1.8) gb.box(Math.floor(x) + 1, h, Math.floor(z) - 1, 1, 1, 1, colorOf('rock2'), { skipBottom: true });
   }
 
-  // slot pads (16 cells)
+  // slot pads (gridN x gridN cells)
   const pad = colorOf('pad'), edge = colorOf('padEdge'), line = colorOf('padLine');
-  for (let gz = 0; gz < 4; gz++) for (let gx = 0; gx < 4; gx++) {
+  for (let gz = 0; gz < gridN; gz++) for (let gx = 0; gx < gridN; gx++) {
     const { x, z } = cellCenter(gx, gz);
     const h = PAD / 2;
     gb.box(x - h, 0, z - h, PAD, PAD_H, PAD, pad, { skipBottom: true });
@@ -162,11 +166,11 @@ export function buildTerrain() {
   }
   // walkway between pads (slightly raised strips)
   const walk = lin(0x41515b);
-  gb.box(-20, 0, -20, 40, 0.12, 40, walk, { skipBottom: true });
+  gb.box(-gh, 0, -gh, gh * 2, 0.12, gh * 2, walk, { skipBottom: true });
 
   // Discreet perimeter lights give the build area a clear boundary at night.
   // They are decorative navigation lights, not an indication of power supply.
-  for (const x of [-20.4, 20.4]) for (const z of [-20.4, 20.4]) {
+  for (const x of [-gh - 0.4, gh + 0.4]) for (const z of [-gh - 0.4, gh + 0.4]) {
     gb.box(x - 0.35, 0, z - 0.35, 0.7, 0.8, 0.7, colorOf('dark'), { skipBottom: true });
     gb.box(x - 0.25, 0.8, z - 0.25, 0.5, 0.2, 0.5, colorOf('siteIce'), { fx: [1, 0, 0], ao: 1 });
   }

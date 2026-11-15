@@ -19,6 +19,8 @@ export const SCIENCE_PANELS = {
   conjunction: S(['NASA/JPL, Mars solar conjunction (2023)', 'https://www.jpl.nasa.gov/news/nasas-mars-fleet-will-still-conduct-science-while-lying-low/']),
   radlab: S(['NASA OSDR RadLab, DosTel readings on the ISS (2022-04-01)', 'https://visualization.osdr.nasa.gov/radlab/api/?spacecraft=ISS&instrument=DosTel&timestamp%3E=2022-04-01T23%3A00&timestamp%3C2022-04-02T01%3A05&absorbed_dose_rate%3E2&flux&latitude&longitude&altitude&b&l&format=html'], ['NASA OSDR RadLab, field definitions and units', 'https://visualization.osdr.nasa.gov/radlab/gui/data-api/']),
   osdrHealth: S(['NASA OSDR, OSD-343: mitochondrial stress in spaceflight', 'https://osdr.nasa.gov/bio/repo/data/studies/OSD-343'], ['da Silveira et al., Cell (2020), original study', 'https://pmc.ncbi.nlm.nih.gov/articles/PMC7870178/']),
+  muscleLoss: S(['NASA OSDR, Open Science Data Repository', 'https://osdr.nasa.gov/bio/repo/']),
+  'over.health': S(['NASA OSDR, Open Science Data Repository', 'https://osdr.nasa.gov/bio/repo/'], ['NASA, Human Performance', CAREER]),
   nightPower: S(['NASA Mars Fact Sheet', 'https://nssdc.gsfc.nasa.gov/planetary/factsheet/marsfact.html']),
   moxieEnergy: S(['NASA, MOXIE', 'https://www.nasa.gov/missions/mars-2020-perseverance/perseverance-rover/nasas-oxygen-generating-experiment-moxie-completes-mars-mission/']),
   dustOnPanels: S(['NASA, InSight', 'https://science.nasa.gov/photojournal/insights-power-generation-after-landing-and-spring-2022']),

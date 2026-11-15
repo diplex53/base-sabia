@@ -1,10 +1,10 @@
 // Scripted players for the story chapters (Apêndice C). They follow the current step the way its hint suggests.
 // Public API only (dispatch + selectors + state).
-import { MODULES } from '../src/data/balance.js';
+import { MODULES, oldSlotToNew } from '../src/data/balance.js';
 import { SOLAR_YIELD_CLEAR_KWH_M2_SOL, MOXIE_KWH_PER_KG, EXTRACTOR_KWH_PER_KG, GH_KWH_PER_M2_SOL } from '../src/data/constants.js';
 import * as sel from '../src/sim/selectors.js';
 
-const SLOT_ORDER = ['s7', 's11', 's2', 's3', 's5', 's8', 's9', 's12', 's1', 's4', 's13', 's14', 's15', 's16', 's10', 's6'];
+const SLOT_ORDER = ['s7', 's11', 's2', 's3', 's5', 's8', 's9', 's12', 's1', 's4', 's13', 's14', 's15', 's16', 's10', 's6'].map(oldSlotToNew);
 const freeSlot = (s) => SLOT_ORDER.find((id) => !s.slots.find((x) => x.id === id).module);
 const ofType = (s, t) => s.slots.filter((sl) => sl.module && sl.module.type === t);
 const useOf = (m) => {

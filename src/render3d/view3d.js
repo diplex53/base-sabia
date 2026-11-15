@@ -9,7 +9,8 @@ import { ModuleCache, ModuleView } from './modules.js';
 import { skyParams, createBackground } from './sky.js';
 import { createDust, createBeacons, createGlows, createOutlines } from './effects.js';
 import { createColonists } from './colonists.js';
-import { cellCenter, PAD, PAD_H, PAN_LIMIT, GARAGE, LANDING_PAD, SITES, BATTERY_CAPACITY_FALLBACK } from './layout.js';
+import { cellCenter, PAD, PAD_H, PAN_LIMIT, GARAGE, LANDING_PAD, SITES, CELL, setGridSize, gridSizeOf, BATTERY_CAPACITY_FALLBACK } from './layout.js';
+import { createDome } from './dome.js';
 
 let BATTERY_CAPS = BATTERY_CAPACITY_FALLBACK;
 try {
@@ -22,7 +23,9 @@ const DEG = Math.PI / 180;
 const CLICK_PX = 6;
 const SITE_GLOW = { ice: 0x7fe8ff, regolith: 0xff9a3c, minerals: 0xc58bff };
 const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
-const GRID_W = 71, GRID_H = 47;   // screen extent (world units) of the 4x4 grid plus ~1 cell margin, at the default view angle
+// screen extent (world units) of the NxN grid plus ~1 cell margin, at the default view angle (az 45, polar 55)
+const gridW = (n) => n * CELL * 1.414 + 14.5;
+const gridH = (n) => n * CELL * 0.81 + 14.5;
 
 function batteryFraction(state) {
   let cap = 0;
@@ -97,7 +100,7 @@ export function createView(container, { onSlotClick, onSiteClick, onSlotContext 
   sunLight.castShadow = true;
   sunLight.shadow.mapSize.set(2048, 2048);
   const sc = sunLight.shadow.camera;
-  sc.left = -62; sc.right = 62; sc.top = 62; sc.bottom = -62; sc.near = 1; sc.far = 320;
+  sc.left = -80; sc.right = 80; sc.top = 80; sc.bottom = -80; sc.near = 1; sc.far = 360;
   sunLight.shadow.bias = -0.0006;
   sunLight.shadow.normalBias = 0.04;
   sunLight.shadow.radius = 2;
@@ -108,11 +111,17 @@ export function createView(container, { onSlotClick, onSiteClick, onSlotContext 
 
   // static world
   const staticMat = makeVoxMaterial();
-  const terrain = buildTerrain();
+  let gridN = 6;
+  let terrain = buildTerrain(gridN);
   const staticMesh = new THREE.Mesh(terrain.geometry, staticMat);
   staticMesh.receiveShadow = true;
   staticMesh.castShadow = true;
   scene.add(staticMesh);
+  const dome = createDome();
+  dome.setGrid(gridN);
+  scene.add(dome.object);
+  let domeSig = '';
+  let domeExtra = 0;   // extra screen height (world units) reserved for the dome while it exists
 
   const roverGeo = buildBoxes(roverBoxes()).opaque;
   const ROVER_HOME = { x: GARAGE.x, z: GARAGE.z + 6.2 };
@@ -188,6 +197,7 @@ export function createView(container, { onSlotClick, onSiteClick, onSlotContext 
   const raycaster = new THREE.Raycaster();
   const ndc = new THREE.Vector2();
 
+  const domeInfo = { exists: false, building: false, progress: 0, amber: false };
   let state = null;
   let selected = null;
   let hovered = null;
@@ -213,8 +223,37 @@ export function createView(container, { onSlotClick, onSiteClick, onSlotContext 
     }
   }
 
+  function applyGrid(n) {
+    if (n === gridN) return;
+    gridN = n;
+    setGridSize(n);
+    const old = terrain.geometry;
+    terrain = buildTerrain(n);
+    staticMesh.geometry = terrain.geometry;
+    old.dispose();
+    dome.setGrid(n);
+    for (const v of views.values()) { scene.remove(v.group); v.dispose(); }
+    views.clear(); slotInfo.clear(); lastSig.clear();
+    for (const pm of slotPicks.values()) pickRoot.remove(pm);
+    slotPicks.clear();
+    marksSig = '!'; colSig = '';
+    hovered = null; outlines.setHover(null);
+    frame2D();
+  }
+
   function sync(st) {
+    applyGrid(gridSizeOf(st.slots));
     const empties = [];
+    let domeMod = null, shield = false;
+    for (const sl of st.slots || []) {
+      const mm = sl.module;
+      if (mm && mm.type === 'dome') domeMod = mm;
+      if (mm && mm.type === 'radShield' && mm.status !== 'building') shield = true;
+    }
+    const dsig = domeMod ? 'd' + (shield ? 'a' : '') : '';
+    if (dsig !== domeSig) { domeSig = dsig; domeExtra = domeMod ? 22 : 0; if (W) frame2D(); }
+    domeInfo.exists = !!domeMod; domeInfo.building = !!domeMod && domeMod.status === 'building';
+    domeInfo.progress = domeMod ? domeMod.progress || 0 : 0; domeInfo.amber = shield;
     for (const slot of st.slots || []) {
       ensureSlot(slot);
       const m = slot.module;
@@ -314,7 +353,7 @@ export function createView(container, { onSlotClick, onSiteClick, onSlotContext 
   function frame2D() {
     // centre the 4x4 grid in the free rectangle (not covered by HUD panels) and fit it to ~85% of it
     const fw = Math.max(120, W - insets.left - insets.right), fh = Math.max(120, H - insets.top - insets.bottom);
-    const S = Math.min(fw * 0.85 / GRID_W, fh * 0.85 / GRID_H);   // px per world unit at zoom 1
+    const S = Math.min(fw * 0.85 / gridW(gridN), fh * 0.85 / (gridH(gridN) + domeExtra * 0.5));   // px per world unit at zoom 1
     const cx = insets.left + fw / 2, cy = insets.top + fh / 2 + 2 * S;   // modules rise above the ground: nudge the ground point down
     camera.left = -cx / S; camera.right = (W - cx) / S; camera.top = cy / S; camera.bottom = -(H - cy) / S;
     camera.updateProjectionMatrix();
@@ -488,6 +527,7 @@ export function createView(container, { onSlotClick, onSiteClick, onSlotContext 
       }
       bg.apply(sky, time, pr);
       dust.update(time, sky.particleAlpha, pr, camera.zoom, controls.target);
+      dome.update(domeInfo, time, sky.nightK);
 
       animCtx.time = time;
       animCtx.nightK = sky.nightK;
@@ -557,7 +597,7 @@ export function createView(container, { onSlotClick, onSiteClick, onSlotContext 
     for (const v of views.values()) v.dispose();
     views.clear();
     cache.dispose();
-    terrain.geometry.dispose(); staticMat.dispose(); roverGeo.dispose();
+    terrain.geometry.dispose(); dome.dispose(); staticMat.dispose(); roverGeo.dispose();
     landerGeo.dispose(); plumeGeo.dispose(); plumeMat.dispose(); puffGeo.dispose(); puffMat.dispose();
     if (marks) marks.geometry.dispose();
     marksMat.dispose();

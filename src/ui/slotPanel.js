@@ -1,5 +1,5 @@
 import { t, getLang } from '../i18n/i18n.js';
-import { el, icon, setText, setWidth, fmt, moduleStatusKey, STATUS_MARK, costText } from './util.js';
+import { el, icon, tOr, setText, setWidth, fmt, moduleStatusKey, STATUS_MARK, costText } from './util.js';
 import { moduleRates, buildOptions, upgradeInfo } from '../sim/selectors.js';
 import { MODULES } from '../data/balance.js';
 import { moduleHidden } from './storyGuide.js';
@@ -12,7 +12,16 @@ const LINES = {
   habitat: ['use'], solar: ['gen'], battery: [], moxie: ['use', 'o2'], extractor: ['use', 'water'],
   greenhouse: ['use', 'food'], shelter: [], reactor: ['gen'],
 };
-const MODULE_ICONS = { habitat: 'pop', solar: 'energy', battery: 'energy', moxie: 'o2', extractor: 'water', greenhouse: 'food', shelter: 'shelter', reactor: 'tech' };
+const MODULE_ICONS = { habitat: 'pop', solar: 'energy', battery: 'energy', moxie: 'o2', extractor: 'water', greenhouse: 'food', shelter: 'shelter', reactor: 'tech',
+  gym: 'pop', hospital: 'pop', thermal: 'energy', pressurizer: 'o2', waterFilter: 'water', decon: 'shelter', warehouse: 'regolith',
+  factory: 'parts', sabatier: 'energy', mine: 'regolith', dome: 'shelter', radShield: 'shelter' };
+const SECTIONS = [
+  ['energy', ['solar', 'battery', 'reactor', 'sabatier', 'thermal']],
+  ['life', ['habitat', 'moxie', 'extractor', 'greenhouse', 'waterFilter', 'pressurizer']],
+  ['production', ['factory', 'mine', 'warehouse']],
+  ['protection', ['shelter', 'decon', 'dome', 'radShield']],
+  ['wellbeing', ['gym', 'hospital']],
+];
 
 export function createSlotPanel(root, ctx) {
   const body = root.querySelector('.panel-body');
@@ -30,7 +39,8 @@ export function createSlotPanel(root, ctx) {
     if (fid) { const n = body.querySelector(`[data-fid="${fid}"]`); if (n && !n.disabled) n.focus(); }
   }
   const act = (action) => { const r = ctx.act(action); sig = null; return r; };
-  const modName = (type) => t('mod.' + type + '.name');
+  const modName = (type) => tOr('mod.' + type + '.name', type);
+  const modDesc = (type) => tOr('mod.' + type + '.desc', '');
 
   function viewNone() {
     return [el('div', { class: 'inspector-empty' }, el('span', { class: 'empty-cross', 'aria-hidden': 'true' }, '+'), el('p', { class: 'muted' }, t('ui.noSlot')))];
@@ -41,14 +51,20 @@ export function createSlotPanel(root, ctx) {
     const shown = cache.opts.filter((o) => !moduleHidden(ctx.getState(), o.type));
     const items = shown.map((o) => el('li', { class: 'opt' + (ctx.isNew('module', o.type) ? ' is-new' : '') },
       el('div', { class: 'opt-head' }, icon(MODULE_ICONS[o.type]), el('strong', {}, modName(o.type)), ctx.isNew('module', o.type) ? el('span', { class: 'new-tag' }, t('story.new')) : null),
-      el('p', { class: 'muted' }, t('mod.' + o.type + '.desc')),
+      el('p', { class: 'muted' }, modDesc(o.type)),
       el('p', { class: 'small' }, t('ui.cost', { c: costText(o.cost) }) + '. ' + t('ui.buildTime', { n: fmt(o.buildSols, 1) })),
       el('button', {
         type: 'button', class: 'btn btn-primary' + (g.build === o.type ? ' guide-target' : ''), 'data-fid': 'build-' + o.type, disabled: !o.ok,
         onclick: () => act({ type: 'build', slotId: slot.id, moduleType: o.type }),
       }, t('ui.build')),
       o.ok ? null : el('p', { class: 'reason' }, t(o.reason || 'err.locked'))));
-    return [el('h3', {}, t('ui.emptySlot', { id: slot.id })), el('p', {}, t('ui.chooseBuild')), el('ul', { class: 'opt-list' }, items)];
+    const byType = new Map(shown.map((o, i) => [o.type, items[i]]));
+    const groups = SECTIONS.map(([id, types]) => [id, types.filter((x) => byType.has(x))]);
+    const known = new Set(SECTIONS.flatMap(([, ty]) => ty));
+    groups.push(['other', shown.map((o) => o.type).filter((x) => !known.has(x))]);
+    const secs = groups.filter(([, ty]) => ty.length).map(([id, ty]) => el('section', { class: 'opt-sec' },
+      el('h4', { class: 'opt-sec-title' }, t('ui.sec.' + id)), el('ul', { class: 'opt-list' }, ty.map((x) => byType.get(x)))));
+    return [el('h3', {}, t('ui.emptySlot', { id: slot.id })), el('p', {}, t('ui.chooseBuild')), ...secs];
   }
 
   function viewModule(slot, state) {
@@ -70,7 +86,7 @@ export function createSlotPanel(root, ctx) {
       }, t('ui.repair')), el('p', { class: 'small' }, t('ui.repairCost', { c: costText({ parts: REPAIR_PARTS }) })));
       if (state.resources.parts < REPAIR_PARTS) out.push(el('p', { class: 'reason' }, t('err.notEnoughParts')));
     }
-    out.push(el('p', { class: 'muted' }, t('mod.' + m.type + '.desc')));
+    out.push(el('p', { class: 'muted' }, modDesc(m.type)));
 
     const def = MODULES[m.type] && MODULES[m.type].levels[m.level - 1];
     const caps = [];

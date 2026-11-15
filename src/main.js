@@ -310,6 +310,7 @@ function handleEvents(events, state) {
         break;
       case 'milestone':
         if (ev.id === 'selfSufficient') modals.showMilestone();
+        else if (ev.id === 'dome') modals.showMilestone('dome');
         break;
       case 'alert':
         if (ev.level === 'danger') pausing();

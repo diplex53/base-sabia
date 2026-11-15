@@ -1,5 +1,5 @@
 import { t, onLangChange, getLang } from '../i18n/i18n.js';
-import { el, fmt, langToggle, tr, costText, realEventLine, icon } from './util.js';
+import { el, tOr, fmt, langToggle, tr, costText, realEventLine, icon } from './util.js';
 import { SCIENCE_PANELS } from '../data/sciencePanels.js';
 import { SCORE } from '../data/balance.js';
 import * as sel from '../sim/selectors.js';
@@ -324,9 +324,10 @@ export function createModals(root, ctx) {
       const pick = { id: null };
       openLive((mm) => expeditionNodes(mm, siteId, pick), (s) => expSig(s, siteId), { label: () => t('ui.expTitle', { site: t('site.' + siteId) }) });
     },
-    showMilestone() {
-      enqueue(() => open((mm) => [el('h2', {}, t('ui.milestoneTitle')), el('p', { class: 'big' }, t('ui.milestoneBody')), closeBtn(mm)],
-        { label: () => t('ui.milestoneTitle') }));
+    showMilestone(kind) {
+      const p = kind === 'dome' ? 'ui.domeMilestone' : 'ui.milestone';
+      enqueue(() => open((mm) => [el('h2', {}, t(p + 'Title')), el('p', { class: 'big' }, t(p + 'Body')), closeBtn(mm)],
+        { label: () => t(p + 'Title') }));
     },
     showHelp(hintKey) {
       open((mm) => [el('h2', {}, t('ui.hintTitle')), el('p', { class: 'big' }, t(hintKey)), closeBtn(mm)], { label: () => t('ui.hintTitle') });
@@ -406,10 +407,10 @@ export function createModals(root, ctx) {
     showModuleScience(type) {
       if (!type) return;
       open((mm) => [
-        el('h2', {}, t('mod.' + type + '.name')),
-        el('p', { class: 'big' }, t('mod.' + type + '.science')),
+        el('h2', {}, tOr('mod.' + type + '.name', type)),
+        el('p', { class: 'big' }, tOr('mod.' + type + '.science', tOr('mod.' + type + '.desc', ''))),
         closeBtn(mm, 'ui.close'),
-      ], { label: () => t('mod.' + type + '.name') });
+      ], { label: () => tOr('mod.' + type + '.name', type) });
     },
     showStart() {
       ctx.setLaunchScreen(true);

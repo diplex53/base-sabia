@@ -7,7 +7,7 @@ const DATA = [
   ['donki', 'tech.spaceWeather'], ['rad', 'speAtmosphere'], ['career', 'careerLimit'],
   ['dust', 'globalStorm'], ['insight', 'dustOnPanels'], ['moxie', 'moxieEnergy'],
   ['bvad', 'over.o2'], ['plants', 'cropsNeedLight'], ['water', 'over.water'],
-  ['mars', 'nightPower'], ['comm', 'conjunction'], ['radlab', 'radlab'], ['osdr', 'osdrHealth'],
+  ['mars', 'nightPower'], ['comm', 'conjunction'], ['radlab', 'radlab'], ['osdr', 'osdrHealth'], ['osdr2', 'muscleLoss'],
 ];
 
 export function nasaDataNodes(openPanel) {
@@ -20,7 +20,7 @@ export function nasaDataNodes(openPanel) {
         el('p', {}, t('data.' + id + '.use')),
         el('p', { class: 'small' }, info.sources.map((source, i) => [i ? ' · ' : '',
           el('a', { href: source.url, target: '_blank', rel: 'noopener noreferrer' }, source.name)])),
-        ['radlab', 'osdrHealth', 'conjunction'].includes(panel)
+        ['radlab', 'osdrHealth', 'muscleLoss', 'conjunction'].includes(panel)
           ? el('button', { type: 'button', class: 'link-btn', onclick: () => openPanel(panel) }, t('data.readPanel')) : null);
     })),
     el('p', { class: 'panel-note' }, t('data.assumptions')),

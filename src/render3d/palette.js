@@ -35,6 +35,12 @@ export const PALETTE = {
   regolith: 0x9c5236,
   regolith2: 0x8a4630,
   sandbag: 0xb98657,
+  // expansion modules
+  gymBody: 0x6b86a0,
+  gymDark: 0x4a6076,
+  shed: 0x959ea4,
+  shedDark: 0x6d777e,
+  aqua: 0x2f8fd0,
   // ground / props
   pad: 0x65747d,
   padEdge: 0x344652,
@@ -82,4 +88,8 @@ export const GLOW = {
   greenhouse: 0xff40d0,
   reactor: 0x60c8ff,
   moxie: 0xff7a2a,
+  sabatier: 0xff8a30,
+  factory: 0xffb060,
+  hospital: 0xffe0c0,
+  gym: 0xa8c4ff,
 };

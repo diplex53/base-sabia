@@ -1,3 +1,4 @@
+import e7 from './en7.js';
 import e6 from './en6.js';
 import e5 from './en5.js';
 import e4 from './en4.js';
@@ -254,4 +255,5 @@ export default {
   ...e4,
   ...e5,
   ...e6,
+  ...e7,
 };

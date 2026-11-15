@@ -42,6 +42,12 @@ export function icon(name) {
   return s;
 }
 
+/** Translation with a fallback (e.g. the module type id) when the key is missing. */
+export function tOr(key, fallback, params) {
+  const v = t(key, params);
+  return v === key ? fallback : v;
+}
+
 export function setText(node, v) {
   if (node._t !== v) { node._t = v; node.textContent = v; }
 }

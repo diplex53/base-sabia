@@ -1,5 +1,5 @@
 ﻿// Scripted players used by the balance tests. They only use the public API (dispatch + selectors + state).
-import { MODULES, SHIP, EXPEDITIONS } from '../src/data/balance.js';
+import { MODULES, SHIP, EXPEDITIONS, SLOTS, oldSlotToNew } from '../src/data/balance.js';
 import { TECHS } from '../src/data/tech.js';
 import {
   SOLAR_YIELD_CLEAR_KWH_M2_SOL, MOXIE_KWH_PER_KG, EXTRACTOR_KWH_PER_KG, GH_KWH_PER_M2_SOL, CROP_M2_PER_PERSON_O2,
@@ -47,7 +47,9 @@ function plan(state) {
   return p;
 }
 
-const PREFERRED_SLOTS = ['s7', 's10', 's2', 's3', 's5', 's8', 's11', 's9', 's12', 's14', 's15', 's1', 's4', 's13', 's16', 's6'];
+// the old 4x4 order, moved to the middle of the 6x6 map (Apêndice E.1), then the outer ring
+const CORE_SLOTS = ['s7', 's10', 's2', 's3', 's5', 's8', 's11', 's9', 's12', 's14', 's15', 's1', 's4', 's13', 's16', 's6'].map(oldSlotToNew);
+const PREFERRED_SLOTS = [...CORE_SLOTS, ...SLOTS.map((s) => s.id).filter((id) => !CORE_SLOTS.includes(id))];
 const RESEARCH_ORDER = ['eds', 'spaceWeather', 'fission', 'waterRecycling', 'regolithPrinting', 'plantHabitat', 'bioregen', 'pressurizedRover'];
 const MATCH = { engineer: ['moxie', 'solar', 'reactor', 'extractor'], botanist: ['greenhouse'] };
 

@@ -1,5 +1,5 @@
 import { t, getLang } from '../i18n/i18n.js';
-import { el, fmt, moduleStatusKey, STATUS_MARK } from '../ui/util.js';
+import { el, tOr, fmt, moduleStatusKey, STATUS_MARK } from '../ui/util.js';
 import { SITES } from '../data/balance.js';
 
 const lerp = (a, b, k) => a + (b - a) * k;
@@ -69,7 +69,14 @@ export function createView(container, { onSlotClick, onSiteClick, onSlotContext 
   let lang = '';
   function update(state) {
     paintBg(state);
-    if (!tiles.size) state.slots.forEach(addTile);
+    if (tiles.size !== state.slots.length) {
+      tiles.clear(); grid.replaceChildren();
+      const n = Math.max(...state.slots.map((s) => Math.max(s.gx, s.gz)), 3) + 1;
+      grid.style.gridTemplateColumns = 'repeat(' + n + ', minmax(0, 1fr))';
+      grid.style.gridTemplateRows = 'repeat(' + n + ', minmax(0, 1fr))';
+      root.classList.toggle('v2d-big', n > 4);
+      state.slots.forEach(addTile);
+    }
     const lg = getLang();
     if (lg !== lang) {
       lang = lg;
@@ -110,7 +117,7 @@ export function createView(container, { onSlotClick, onSiteClick, onSlotContext 
         tl.bar.hidden = true; tl.dust.textContent = '';
         tl.node.setAttribute('aria-label', t('ui.emptySlot', { id: slot.id }) + '. ' + t('ui.build'));
       } else {
-        const nm = t('mod.' + m.type + '.name');
+        const nm = tOr('mod.' + m.type + '.name', m.type);
         tl.name.textContent = nm;
         tl.level.textContent = t('ui.level', { n: m.level });
         tl.mark.textContent = STATUS_MARK[key];

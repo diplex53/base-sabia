@@ -1,5 +1,5 @@
 // Scripted tutorial chapters. Starting stocks/capacities are game balance, not science.
-import { MODULES } from './balance.js';
+import { MODULES, oldSlotToNew } from './balance.js';
 
 export const STORY_FEATURES = ['toggle', 'assign', 'clean', 'ships', 'tech', 'expeditions', 'shelter'];
 const crew = [
@@ -8,7 +8,8 @@ const crew = [
   { name: 'Amara Okafor', profession: 'botanist', dose: 324 },
   { name: 'Tomás Reyes', profession: 'geologist', dose: 324 },
 ];
-const module = (slot, type, level = 1, extra = {}) => ({ slot, type, level, ...extra });
+// Slots are written in the old 4x4 numbering and mapped to the middle of the 6x6 map (Apêndice E.1).
+const module = (slot, type, level = 1, extra = {}) => ({ slot: oldSlotToNew(slot), type, level, ...extra });
 const base = [module('s6', 'habitat', 2), module('s1', 'solar', 1, { dust: 0.12 }),
   module('s2', 'solar', 1, { dust: 0.12 }), module('s3', 'solar', 1, { dust: 0.12 }),
   module('s10', 'battery', 3), module('s11', 'battery', 3), module('s7', 'moxie'),

@@ -141,14 +141,29 @@ export const EXPEDITIONS = {
 };
 export const EXPEDITION_SITES = ['regolith', 'ice', 'minerals'];
 
-// 16 fixed slots in a 4x4 grid: s1 = (0,0), s2 = (1,0), ..., s16 = (3,3).
-export const SLOTS = Array.from({ length: 16 }, (_, i) => ({ id: `s${i + 1}`, gx: i % 4, gz: Math.floor(i / 4) }));
+// 36 fixed slots in a 6x6 grid (Apêndice E.1): s1 = (0,0), s2 = (1,0), ..., s36 = (5,5), numbered by rows.
+export const GRID_N = 6;
+export const SLOTS = Array.from({ length: GRID_N * GRID_N }, (_, i) => ({ id: `s${i + 1}`, gx: i % GRID_N, gz: Math.floor(i / GRID_N) }));
+
+/** Id of the slot at (gx, gz) in the 6x6 grid. */
+export const slotIdAt = (gx, gz) => `s${gz * GRID_N + gx + 1}`;
+/**
+ * Old 4x4 slot id (saves and data from before Apêndice E) -> new id: same cell shifted by (+1, +1),
+ * so the old base sits in the middle of the new map. Ids that are not old slot ids come back unchanged.
+ */
+export function oldSlotToNew(id) {
+  const m = /^s(\d+)$/.exec(id || '');
+  const i = m ? Number(m[1]) - 1 : -1;
+  if (i < 0 || i >= 16) return id;
+  return slotIdAt((i % 4) + 1, Math.floor(i / 4) + 1);
+}
 
 // Off-grid sites, used in Phase 3 (expeditions).
 export const SITES = [
-  { id: 'ice', gx: -2, gz: -1 },
-  { id: 'regolith', gx: 5, gz: 1 },
-  { id: 'minerals', gx: 5, gz: 4 },
+  // shifted (+0..+2, +1) with the 6x6 map (E.1) so they stay off the grid
+  { id: 'ice', gx: -2, gz: 0 },
+  { id: 'regolith', gx: 7, gz: 2 },
+  { id: 'minerals', gx: 7, gz: 5 },
 ];
 
 export const START = {
@@ -156,9 +171,9 @@ export const START = {
     // parts 45 -> 60 with expeditions (Apêndice B.7). regolith is replaced by DIFFICULTY.regolithStart.
     resources: { energy: 30, o2: 30, water: 60, food: 80, regolith: 0, parts: 60, science: 0 },
     modules: [
-      { slot: 's6', type: 'habitat', level: 1 },
-      { slot: 's7', type: 'solar', level: 1 },
-      { slot: 's10', type: 'battery', level: 1 },
+      { slot: 's15', type: 'habitat', level: 1 },
+      { slot: 's16', type: 'solar', level: 1 },
+      { slot: 's21', type: 'battery', level: 1 },
     ],
     colonists: 4,
     unlocked: ['habitat', 'solar', 'battery', 'moxie', 'extractor', 'greenhouse', 'shelter'],

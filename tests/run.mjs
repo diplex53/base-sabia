@@ -63,7 +63,7 @@ const TECH_IDS = [...Object.keys(TECHS), 'warpDrive'];
 const SITES = ['regolith', 'ice', 'minerals', 'moon'];
 function randomAction(rand, state) {
   const pick = (arr) => arr[Math.floor(rand() * arr.length)];
-  const slotId = rand() < 0.95 ? `s${1 + Math.floor(rand() * 16)}` : 's99';
+  const slotId = rand() < 0.95 ? `s${1 + Math.floor(rand() * 36)}` : 's99';
   const colonistId = state.colonists.length && rand() < 0.9 ? pick(state.colonists).id : 'c999';
   switch (Math.floor(rand() * 14)) {
     case 0: return { type: 'build', slotId, moduleType: pick(TYPES) };
@@ -306,15 +306,15 @@ test('actions: costs, errors and rules', () => {
   assert.deepEqual(g.dispatch({ type: 'nope' }), { ok: false, reason: 'err.unknownAction' });
   assert.deepEqual(g.dispatch({ type: 'toString' }), { ok: false, reason: 'err.unknownAction' });
   assert.equal(g.dispatch({ type: 'build', slotId: 's99', moduleType: 'solar' }).reason, 'err.noSuchSlot');
-  assert.equal(g.dispatch({ type: 'build', slotId: 's6', moduleType: 'solar' }).reason, 'err.slotOccupied');
+  assert.equal(g.dispatch({ type: 'build', slotId: 's15', moduleType: 'solar' }).reason, 'err.slotOccupied');
   assert.equal(g.dispatch({ type: 'build', slotId: 's1', moduleType: 'x' }).reason, 'err.unknownModule');
   assert.equal(g.dispatch({ type: 'build', slotId: 's1', moduleType: 'reactor' }).reason, 'err.locked');
   assert.equal(g.dispatch({ type: 'build', slotId: 's1', moduleType: 'habitat' }).reason, 'err.notEnoughRegolith');
-  assert.equal(g.dispatch({ type: 'toggle', slotId: 's6', enabled: false }).reason, 'err.cannotDisable');
-  assert.equal(g.dispatch({ type: 'clean', slotId: 's6' }).reason, 'err.notSolar');
+  assert.equal(g.dispatch({ type: 'toggle', slotId: 's15', enabled: false }).reason, 'err.cannotDisable');
+  assert.equal(g.dispatch({ type: 'clean', slotId: 's15' }).reason, 'err.notSolar');
   assert.equal(g.dispatch({ type: 'clean', slotId: 's1' }).reason, 'err.slotEmpty');
-  assert.equal(g.dispatch({ type: 'demolish', slotId: 's6' }).reason, 'err.busy');
-  assert.equal(g.dispatch({ type: 'assign', colonistId: 'zz', slotId: 's7' }).reason, 'err.noSuchColonist');
+  assert.equal(g.dispatch({ type: 'demolish', slotId: 's15' }).reason, 'err.busy');
+  assert.equal(g.dispatch({ type: 'assign', colonistId: 'zz', slotId: 's16' }).reason, 'err.noSuchColonist');
   const p0 = s.resources.parts;
   assert.ok(g.dispatch({ type: 'build', slotId: 's1', moduleType: 'moxie' }).ok);
   assert.equal(s.resources.parts, p0 - 12);
@@ -343,11 +343,11 @@ test('actions: costs, errors and rules', () => {
   assert.ok(g.dispatch({ type: 'demolish', slotId: 's1' }).ok);
   assert.equal(s.resources.parts, before + Math.floor((12 + 16) / 2));
   // clean (the engineer on base makes it twice as fast)
-  s.slots[6].module.dust = 0.3;
-  assert.ok(g.dispatch({ type: 'clean', slotId: 's7' }).ok);
+  s.slots[15].module.dust = 0.3;
+  assert.ok(g.dispatch({ type: 'clean', slotId: 's16' }).ok);
   g.tick(0.21);
-  assert.equal(s.slots[6].module.dust < 0.01 && s.slots[6].module.status === 'ok', true, 'panel cleaned');
-  assert.equal(selectors.upgradeInfo(s, 's7').nextLevel, 2);
+  assert.equal(s.slots[15].module.dust < 0.01 && s.slots[15].module.status === 'ok', true, 'panel cleaned');
+  assert.equal(selectors.upgradeInfo(s, 's16').nextLevel, 2);
   assert.equal(selectors.upgradeInfo(s, 's1'), null);
 });
 
@@ -752,12 +752,12 @@ test('expeditions: errors, departure, reward with geologist, done event, panel',
   s.resources.energy = 30;
   const opt = selectors.expeditionOptions(s).find((o) => o.site === 'regolith');
   assert.deepEqual([opt.sols, opt.energy, opt.reward, opt.science, opt.ok], [1, 6, { regolith: 30 }, 2, true]);
-  assert.ok(g.dispatch({ type: 'assign', colonistId: geo.id, slotId: 's7' }).ok);
+  assert.ok(g.dispatch({ type: 'assign', colonistId: geo.id, slotId: 's16' }).ok);
   assert.ok(g.dispatch({ type: 'startExpedition', site: 'regolith', colonistId: geo.id }).ok);
   assert.equal(s.resources.energy, 30 - EXPEDITIONS.regolith.energy);
   assert.equal(geo.location, 'expedition');
   assert.equal(geo.assignedTo, null, 'left the module');
-  assert.equal(s.slots[6].module.staff.length, 0);
+  assert.equal(s.slots[15].module.staff.length, 0);
   assert.equal(g.dispatch({ type: 'startExpedition', site: 'ice', colonistId: geo.id }).reason, 'err.colonistBusy');
   assert.equal(g.dispatch({ type: 'startExpedition', site: 'ice', colonistId: eng.id }).reason, 'err.noRover');
   assert.equal(selectors.roversFree(s), 0);
@@ -904,7 +904,7 @@ test('radiation: career limit retires, ship takes them home', () => {
   g.state.events.auto = false;
   const c = g.state.colonists[0];
   c.dose = 599.9;
-  g.dispatch({ type: 'assign', colonistId: c.id, slotId: 's7' });
+  g.dispatch({ type: 'assign', colonistId: c.id, slotId: 's16' });
   g.tick(1);
   assert.equal(c.status, 'retired');
   assert.equal(c.assignedTo, null);
@@ -973,7 +973,7 @@ test('game over freezes the game', () => {
   const t = g.state.t;
   g.tick(5);
   assert.equal(g.state.t, t);
-  assert.equal(g.dispatch({ type: 'clean', slotId: 's7' }).reason, 'err.gameOver');
+  assert.equal(g.dispatch({ type: 'clean', slotId: 's16' }).reason, 'err.gameOver');
   assert.equal(g.state.over.score, selectors.score(g.state));
 });
 
@@ -1033,7 +1033,7 @@ test('story: creation, first step, storyInfo, colony mode has everything unlocke
     assert.equal(s.events.auto, false);
     near(s.t, def.startT, 1e-9, 'startT');
     assert.deepEqual(s.colonists.map((c) => c.name).slice(0, 4), ['Lia Moreira', 'Kenji Tanaka', 'Amara Okafor', 'Tomás Reyes']);
-    assert.equal(s.slots.find((x) => x.id === 's6').module.type, 'habitat');
+    assert.equal(s.slots.find((x) => x.id === 's15').module.type, 'habitat');
     const ev = g.drainEvents();
     assert.equal(evOf(ev, 'story.step')[0].id, def.steps[0].id);
     const info = selectors.storyInfo(s);
@@ -1051,9 +1051,9 @@ test('story: locked features and modules return err.locked (actions and selector
   g.drainEvents();
   const L = { ok: false, reason: 'err.locked' };
   assert.deepEqual(g.dispatch({ type: 'build', slotId: 's1', moduleType: 'battery' }), L);
-  assert.deepEqual(g.dispatch({ type: 'toggle', slotId: 's6', enabled: false }), L);
-  assert.deepEqual(g.dispatch({ type: 'assign', colonistId: s.colonists[0].id, slotId: 's6' }), L);
-  assert.deepEqual(g.dispatch({ type: 'clean', slotId: 's6' }), L);
+  assert.deepEqual(g.dispatch({ type: 'toggle', slotId: 's15', enabled: false }), L);
+  assert.deepEqual(g.dispatch({ type: 'assign', colonistId: s.colonists[0].id, slotId: 's15' }), L);
+  assert.deepEqual(g.dispatch({ type: 'clean', slotId: 's15' }), L);
   assert.deepEqual(g.dispatch({ type: 'setShelter', on: true }), L);
   assert.deepEqual(g.dispatch({ type: 'research', techId: 'eds' }), L);
   assert.deepEqual(g.dispatch({ type: 'startExpedition', site: 'regolith', colonistId: s.colonists[0].id }), L);
