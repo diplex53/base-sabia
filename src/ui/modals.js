@@ -9,7 +9,9 @@ import { colonyProgress } from './progress.js';
 import { nasaDataNodes } from './nasaData.js';
 
 const FOCUSABLE = 'button:not([disabled]), a[href], select, input:not([disabled]), [tabindex]:not([tabindex="-1"])';
-const profName = (p) => (p ? t('prof.' + p + '.name') : t('prof.none'));
+let techSel = null; // selected node in the technology tree (survives re-renders)
+let techMute = false;
+const profName = (p) =>(p ? t('prof.' + p + '.name') : t('prof.none'));
 
 export function createModals(root, ctx) {
   const stack = [];
@@ -192,27 +194,133 @@ export function createModals(root, ctx) {
     const opts = sel.techOptions ? sel.techOptions(state) : null;
     if (!opts) return [el('h2', {}, t('ui.techTitle')), el('p', { class: 'muted' }, t('ui.noTech')), closeBtn(mm, 'ui.close')];
     const have = new Set(opts.filter((o) => o.unlocked).map((o) => o.id));
-    const cards = opts.filter((o) => !Array.isArray(state.unlocked.techs) || state.unlocked.techs.includes(o.id)).map((o) => {
-      const reqs = o.requires || [];
-      const met = reqs.every((r) => have.has(r));
-      const st = o.unlocked ? 'unlocked' : met ? 'available' : 'locked';
-      return el('li', { class: 'tech-card ' + st },
-        el('span', { class: 'tech-state' }, t('ui.techState.' + st)),
-        el('h3', {}, t('tech.' + o.id + '.name')),
-        el('p', { class: 'small' }, t('tech.' + o.id + '.desc')),
-        el('p', { class: 'small muted' }, t('ui.techReal', { real: t('tech.' + o.id + '.real') })),
-        el('p', { class: 'small num' }, t('ui.techCost', { n: o.cost })),
-        reqs.length ? el('p', { class: 'small' }, t('ui.techRequires', { name: reqs.map((r) => t('tech.' + r + '.name')).join(', ') })) : null,
-        o.unlocked ? null : el('button', {
-          type: 'button', class: 'btn btn-primary', 'data-fid': 'tech-' + o.id, disabled: !o.ok,
-          onclick: () => ctx.act({ type: 'research', techId: o.id }),
-        }, t('ui.research')),
-        !o.unlocked && !o.ok && o.reason ? el('p', { class: 'reason' }, tr(o.reason)) : null);
+    const vis = opts.filter((o) => !Array.isArray(state.unlocked.techs) || state.unlocked.techs.includes(o.id));
+    const byId = new Map(vis.map((o) => [o.id, o]));
+    const reqsOf = (o) => (o.requires || []).filter((r) => byId.has(r)); // edges to hidden techs are skipped
+    const stOf = (o) => (o.unlocked ? 'unlocked' : (o.requires || []).every((r) => have.has(r)) ? 'available' : 'locked');
+    const nm = (id) => t('tech.' + id + '.name');
+
+    // layout: depth = longest path from a root; children placed in rows next to their first parent
+    const depth = new Map();
+    const dOf = (o, seen = new Set()) => {
+      if (depth.has(o.id)) return depth.get(o.id);
+      if (seen.has(o.id)) return 0;
+      seen.add(o.id);
+      const d = reqsOf(o).reduce((m, r) => Math.max(m, dOf(byId.get(r), seen) + 1), 0);
+      depth.set(o.id, d);
+      return d;
+    };
+    vis.forEach((o) => dOf(o));
+    const kids = new Map(vis.map((o) => [o.id, []]));
+    vis.forEach((o) => { const p = reqsOf(o)[0]; if (p) kids.get(p).push(o); });
+    const row = new Map();
+    const place = (o, r) => {
+      if (row.has(o.id)) return r;
+      row.set(o.id, r);
+      let next = r;
+      kids.get(o.id).forEach((k) => { next = place(k, next); });
+      return Math.max(r + 1, next);
+    };
+    let nRows = 0;
+    vis.filter((o) => !reqsOf(o).length).forEach((o) => { nRows = place(o, nRows); });
+    vis.forEach((o) => { if (!row.has(o.id)) nRows = place(o, nRows); }); // safety for cycles
+    const nCols = Math.max(1, ...vis.map((o) => depth.get(o.id) + 1));
+
+    // selection (kept across re-renders and after researching)
+    if (!byId.has(techSel)) {
+      const pick = vis.find((o) => stOf(o) === 'available' && o.ok) || vis.find((o) => stOf(o) === 'available') || vis[0];
+      techSel = pick ? pick.id : null;
+    }
+    const select = (id) => {
+      if (techSel === id || techMute) return;
+      techSel = id;
+      techMute = true; // focus restores during re-render must not change the selection
+      try {
+        rerender(mm);
+        const n = mm.card.querySelector(`[data-fid="ttn-${id}"]`);
+        if (n) n.focus(); // focus follows selection (Safari does not focus buttons on click)
+      } finally { techMute = false; }
+    };
+
+    // connections (one SVG behind the nodes; x in %, y in px)
+    const ROW = 108, DOT_Y = 28;
+    const cx = (c) => ((c + 0.5) / nCols) * 100 + '%';
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('class', 'tt-lines');
+    svg.setAttribute('aria-hidden', 'true');
+    const line = (x1, y1, x2, y2, on) => {
+      const l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      Object.entries({ x1, y1, x2, y2 }).forEach(([k, v]) => l.setAttribute(k, v));
+      l.setAttribute('class', on ? 'on' : 'off');
+      svg.append(l);
+    };
+    vis.forEach((o) => reqsOf(o).forEach((r) => {
+      const pc = depth.get(r), cc = depth.get(o.id);
+      const py = row.get(r) * ROW + DOT_Y, cy = row.get(o.id) * ROW + DOT_Y;
+      const on = have.has(r);
+      if (py === cy) { line(cx(pc), py, cx(cc), cy, on); return; }
+      const mx = ((pc + 1) / nCols) * 100 + '%';
+      line(cx(pc), py, mx, py, on); line(mx, py, mx, cy, on); line(mx, cy, cx(cc), cy, on);
+    }));
+
+    const nodes = vis.map((o) => {
+      const st = stOf(o);
+      const isSel = o.id === techSel;
+      return el('button', {
+        type: 'button',
+        class: 'tt-node ' + st + (st === 'available' && o.ok ? ' afford' : '') + (isSel ? ' sel' : ''),
+        style: `grid-column:${depth.get(o.id) + 1};grid-row:${row.get(o.id) + 1}`,
+        'data-fid': 'ttn-' + o.id,
+        'aria-pressed': isSel ? 'true' : 'false',
+        'data-autofocus': isSel,
+        'aria-label': nm(o.id) + ', ' + t('ui.techState.' + st) + ', ' + t('ui.techCost', { n: o.cost }),
+        onclick: () => select(o.id),
+        onfocus: () => select(o.id),
+      },
+        el('span', { class: 'tt-dot', 'aria-hidden': 'true' }, el('span', { class: st === 'unlocked' ? 'tt-check' : st === 'locked' ? 'tt-lock' : 'tt-core' })),
+        el('span', { class: 'tt-name' }, nm(o.id)),
+        el('span', { class: 'tt-cost num' }, o.unlocked ? t('ui.techState.unlocked') : o.cost));
     });
+
+    const s = byId.get(techSel);
+    let detail = null;
+    if (s) {
+      const st = stOf(s);
+      const reqs = s.requires || [];
+      detail = el('div', { class: 'tt-detail', 'aria-live': 'polite' },
+        el('span', { class: 'tech-state tt-state ' + st }, t('ui.techState.' + st)),
+        el('h3', {}, nm(s.id)),
+        el('p', { class: 'small' }, t('tech.' + s.id + '.desc')),
+        el('p', { class: 'small muted' }, t('ui.techReal', { real: t('tech.' + s.id + '.real') })),
+        el('p', { class: 'small num' }, t('ui.techCost', { n: s.cost })),
+        reqs.length ? el('p', { class: 'small' }, t('ui.techRequires', { name: reqs.map(nm).join(', ') })) : null,
+        !s.unlocked && !s.ok && s.reason ? el('p', { class: 'reason' }, tr(s.reason)) : null,
+        s.unlocked ? null : el('button', {
+          type: 'button', class: 'btn btn-primary', 'data-fid': 'tech-' + s.id, disabled: !s.ok,
+          onclick: () => {
+            ctx.act({ type: 'research', techId: s.id });
+            setTimeout(() => {
+              if (mm.card.contains(document.activeElement)) return;
+              const n = mm.card.querySelector(`[data-fid="ttn-${s.id}"]`);
+              if (n) n.focus();
+            }, 60);
+          },
+        }, t('ui.research')));
+    }
+
+    const legend = el('ul', { class: 'tt-legend', 'aria-label': t('ui.techTree.legend') },
+      ['unlocked', 'available', 'locked'].map((k) => el('li', { class: k }, el('span', { class: 'tt-mini', 'aria-hidden': 'true' }), t('ui.techState.' + k))));
+
     return [
       el('h2', {}, t('ui.techTitle')),
       el('p', { class: 'num' }, t('ui.techScience', { n: fmt(state.resources.science, 0) })),
-      el('ul', { class: 'tech-grid' }, cards),
+      legend,
+      el('div', { class: 'tt-wrap' },
+        el('div', {
+          class: 'tt-tree', role: 'group', 'aria-label': t('ui.techTree.aria'),
+          style: `grid-template-columns:repeat(${nCols},minmax(0,1fr));grid-template-rows:repeat(${nRows},${ROW}px);height:${nRows * ROW}px`,
+        }, svg, nodes),
+        detail),
       closeBtn(mm, 'ui.close', false),
     ];
   }
@@ -319,7 +427,7 @@ export function createModals(root, ctx) {
     showShipDecision() { enqueue(showShipDecisionNow); },
     openShipDecisionNow() { if (!decisionModal) showShipDecisionNow(); },
     showShipLanded(info) { enqueue(() => showLandedNow(info)); },
-    showTech() { openLive(techNodes, techSig, { wide: true, label: () => t('ui.techTitle') }); },
+    showTech() { openLive(techNodes, techSig, { wide: true, className: 'tech-modal', label: () => t('ui.techTitle') }); },
     showExpedition(siteId) {
       const pick = { id: null };
       openLive((mm) => expeditionNodes(mm, siteId, pick), (s) => expSig(s, siteId), { label: () => t('ui.expTitle', { site: t('site.' + siteId) }) });

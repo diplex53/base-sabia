@@ -50,7 +50,7 @@ export function createSlotPanel(root, ctx) {
   let pop = null;
   function closePopup() {
     if (!pop) return;
-    document.removeEventListener('keydown', pop.onKey);
+    window.removeEventListener('keydown', pop.onKey, true);
     pop.back.remove();
     pop = null;
   }
@@ -66,8 +66,8 @@ export function createSlotPanel(root, ctx) {
     const box = el('div', { class: 'build-menu', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'build-menu-title' },
       el('div', { class: 'build-menu-head' }, title, closeBtn), content);
     const back = el('div', { class: 'build-menu-back', onclick: (e) => { if (e.target === back) dismissPopup(); } }, box);
-    const onKey = (e) => { if (e.key === 'Escape') { e.stopPropagation(); e.preventDefault(); dismissPopup(); } };
-    document.addEventListener('keydown', onKey);
+    const onKey = (e) => { if (e.key === 'Escape' && pop) { e.stopImmediatePropagation(); e.preventDefault(); dismissPopup(); } };
+    window.addEventListener('keydown', onKey, true);
     document.body.appendChild(back);
     pop = { back, title, content, closeBtn, onKey };
     closeBtn.focus();
@@ -99,7 +99,7 @@ export function createSlotPanel(root, ctx) {
     const a = document.activeElement;
     const fid = a && pop.back.contains(a) ? a.dataset.fid : null;
     const top = pop.content.scrollTop;
-    setText(pop.title, t('ui.buildMenuTitle', { id: slot.id }));
+    setText(pop.title, t('ui.buildMenuTitle'));
     pop.closeBtn.setAttribute('aria-label', t('ui.close'));
     pop.content.replaceChildren(...secs);
     pop.content.scrollTop = top;

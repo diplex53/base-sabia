@@ -1,4 +1,4 @@
 export default {
-  'ui.buildMenuTitle': 'Build at {id}',
+  'ui.buildMenuTitle': 'What do you want to build?',
   'ui.buildMenuHint': 'The build menu is open.',
 };
