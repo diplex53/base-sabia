@@ -1714,6 +1714,24 @@ test('crafting: a save without inv loads and the new modules are buildable in co
   for (const t of ['drillBasic', 'drillAdvanced', 'craftTable', 'moduleBuilder']) assert.ok(!st.unlocked.modules.includes(t), t);
 });
 
+test('craft economy: new colony starts with table + drill, needs kits, sifts regolith, story stays parts', () => {
+  const g = createGame({ mode: 'colony', economy: 'craft', difficulty: 'cadet', seed: 1 });
+  const s = g.state;
+  assert.equal(s.economy, 'craft');
+  for (const t of ['craftTable', 'drillBasic']) assert.ok(s.slots.some((sl) => sl.module && sl.module.type === t), t);
+  const free = () => s.slots.find((sl) => !sl.module).id;
+  assert.equal(g.dispatch({ type: 'build', slotId: free(), moduleType: 'greenhouse' }).reason, 'err.needKit');
+  assert.equal(g.dispatch({ type: 'build', slotId: free(), moduleType: 'solar' }).ok, true); // starter solar kit
+  const reg = s.resources.regolith, iron = s.inv.iron || 0;
+  assert.equal(g.dispatch({ type: 'craft', recipeId: 'siftRegolith' }).ok, true);
+  assert.equal(s.resources.regolith, reg - 5);
+  assert.equal(s.inv.iron, iron + 2);
+  assert.equal(g.dispatch({ type: 'craft', recipeId: 'kit.greenhouse' }).ok, true);
+  assert.equal(g.dispatch({ type: 'build', slotId: free(), moduleType: 'greenhouse' }).ok, true);
+  assert.equal(createGame({ mode: 'story', chapter: 1, seed: 1, economy: 'craft' }).state.economy, 'parts');
+  assert.equal(createGame({ seed: 1 }).state.economy, 'parts');
+});
+
 // ---------- report ----------
 if (REPORT) {
   const f = (x, d = 0) => (x === Infinity ? 'inf' : x === null || x === undefined ? '-' : x.toFixed(d));

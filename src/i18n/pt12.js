@@ -52,4 +52,12 @@ export default {
   'mod.moduleBuilder.name': 'Construtora de Módulos',
   'mod.moduleBuilder.desc': 'Uma grande impressora que monta os kits das estruturas maiores, como painel solar, hospital e domo.',
   'mod.moduleBuilder.science': 'Impressoras 3D grandes podem montar estruturas com materiais locais. A NASA testa esse tipo de construção para Marte e para a Lua.',
+
+  // Economia de fabricação (jogo novo no Modo Colônia).
+  'recipe.siftRegolith': 'Peneirar regolito',
+  'craft.welcome': 'Fabrique itens na Mesa de Produção (tecla P). Inventário: tecla V.',
+  'res.ironBars': 'Barras de ferro',
+  'res.ironBarsShort': 'Barras de ferro (obras, melhorias e consertos). Fabrique na Mesa de Produção (P).',
+  'err.notEnoughBars': 'Faltam barras de ferro. Fabrique na Mesa de Produção (P).',
+  'hint.craftAllGood': 'Tudo em ordem. Peneire regolito e fabrique kits na Mesa de Produção (tecla P) para crescer a base.',
 };

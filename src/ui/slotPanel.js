@@ -3,6 +3,20 @@ import { el, icon, tOr, setText, setWidth, fmt, moduleStatusKey, STATUS_MARK, co
 import { moduleRates, buildOptions, upgradeInfo } from '../sim/selectors.js';
 import { MODULES } from '../data/balance.js';
 import { moduleHidden } from './storyGuide.js';
+import { invName } from './crafting.js';
+import { isCraftEconomy, hasParts, invGet } from '../sim/crafting.js';
+import { craftBuildCost } from '../sim/build.js';
+
+// Craft economy: parts are paid in iron bars, so the cost text names them.
+const ctext = (state, cost) => (!isCraftEconomy(state) ? costText(cost) : (Object.entries(cost || {}).filter(([, n]) => n > 0)
+  .map(([k, n]) => fmt(n, 0) + ' ' + invName(k === 'parts' ? 'ironBar' : k).toLowerCase()).join(' + ') || '0'));
+/** Craft economy: what a build card needs (its kit, or items with have/need). */
+function craftNeed(state, o) {
+  if (o.kit) return t('ui.kitReady');
+  const c = craftBuildCost(o.type);
+  if (!c) return t('ui.needKit');
+  return t('ui.itemCost', { c: Object.entries(c).map(([k, n]) => invName(k) + ' ' + Math.floor(invGet(state, k) + 1e-9) + '/' + n).join(', ') });
+}
 
 // Repair cost comes from the core (EVENTS.failure.repairParts); the module may not exist yet.
 let REPAIR_PARTS = 3;
@@ -90,9 +104,10 @@ export function createSlotPanel(root, ctx) {
         el('div', { class: 'opt-head' }, icon(MODULE_ICONS[o.type]), el('strong', {}, modName(o.type)), isNew ? el('span', { class: 'new-tag' }, t('story.new')) : null),
         el('p', { class: 'muted' }, modDesc(o.type)),
         modScience(o.type),
-        el('p', { class: 'small' }, t('ui.cost', { c: costText(o.cost) }) + '. ' + t('ui.buildTime', { n: fmt(o.buildSols, 1) })),
-        o.ok ? null : el('p', { class: 'reason' }, t(o.reason || 'err.locked')),
-        o.kit ? el('p', { class: 'kit-badge' }, t('ui.kitReady')) : null,
+        isCraftEconomy(state) ? el('p', { class: 'small' + (o.kit ? ' kit-badge' : '') }, craftNeed(state, o) + '. ' + t('ui.buildTime', { n: fmt(o.buildSols, 1) }))
+          : el('p', { class: 'small' }, t('ui.cost', { c: costText(o.cost) }) + '. ' + t('ui.buildTime', { n: fmt(o.buildSols, 1) })),
+        o.ok || (isCraftEconomy(state) && o.reason === 'err.needKit') ? null : el('p', { class: 'reason' }, t(o.reason || 'err.locked')),
+        o.kit && !isCraftEconomy(state) ? el('p', { class: 'kit-badge' }, t('ui.kitReady')) : null,
         el('button', {
           type: 'button', class: 'btn btn-primary' + (g.build === o.type ? ' guide-target' : ''), 'data-fid': 'build-' + o.type, disabled: !o.ok,
           onclick: () => { const r = act({ type: 'build', slotId: slot.id, moduleType: o.type }); if (!r || r.ok !== false) closePopup(); },
@@ -132,10 +147,10 @@ export function createSlotPanel(root, ctx) {
     }
     if (key === 'broken') {
       out.push(el('button', {
-        type: 'button', class: 'btn btn-primary', 'data-fid': 'repair', disabled: state.resources.parts < REPAIR_PARTS,
+        type: 'button', class: 'btn btn-primary', 'data-fid': 'repair', disabled: !hasParts(state, REPAIR_PARTS),
         onclick: () => act({ type: 'repair', slotId: slot.id }),
-      }, t('ui.repair')), el('p', { class: 'small' }, t('ui.repairCost', { c: costText({ parts: REPAIR_PARTS }) })));
-      if (state.resources.parts < REPAIR_PARTS) out.push(el('p', { class: 'reason' }, t('err.notEnoughParts')));
+      }, t('ui.repair')), el('p', { class: 'small' }, t('ui.repairCost', { c: ctext(state, { parts: REPAIR_PARTS }) })));
+      if (!hasParts(state, REPAIR_PARTS)) out.push(el('p', { class: 'reason' }, t(isCraftEconomy(state) ? 'err.notEnoughBars' : 'err.notEnoughParts')));
     }
     out.push(el('p', { class: 'muted' }, modDesc(m.type)));
 
@@ -172,8 +187,8 @@ export function createSlotPanel(root, ctx) {
         type: 'button', class: 'btn', 'data-fid': 'upgrade', disabled: !up.ok,
         onclick: () => act({ type: 'upgrade', slotId: slot.id }),
       }, t('ui.upgradeTo', { n: up.nextLevel })));
-      out.push(el('p', { class: 'small' }, t('ui.cost', { c: costText(up.cost) }) + '. ' + t('ui.buildTime', { n: fmt(up.buildSols, 1) })));
-      if (!up.ok && up.reason) out.push(el('p', { class: 'reason' }, key === 'broken' ? t('story.repairFirst') : t(up.reason)));
+      out.push(el('p', { class: 'small' }, t('ui.cost', { c: ctext(state, up.cost) }) + '. ' + t('ui.buildTime', { n: fmt(up.buildSols, 1) })));
+      if (!up.ok && up.reason) out.push(el('p', { class: 'reason' }, key === 'broken' ? t('story.repairFirst') : t(isCraftEconomy(state) && up.reason === 'err.notEnoughParts' ? 'err.notEnoughBars' : up.reason)));
     } else if (m.level >= 3) {
       out.push(el('p', { class: 'muted' }, t('ui.maxLevel')));
     }
@@ -226,11 +241,11 @@ export function createSlotPanel(root, ctx) {
     if (!slot) s = 'none';
     else if (!slot.module) {
       cache.opts = buildOptions(state, id);
-      s = 'empty|' + id + '|' + cache.opts.map((o) => o.type + (o.ok ? 1 : 0) + (o.reason || '') + (o.kit ? 'k' : '')).join(',');
+      s = 'empty|' + id + '|' + cache.opts.map((o) => o.type + (o.ok ? 1 : 0) + (o.reason || '') + (o.kit ? 'k' : '')).join(',') + (isCraftEconomy(state) ? '|' + Object.values(state.inv || {}).map((v) => Math.floor(v)).join('.') : '');
     } else {
       const m = slot.module;
       cache.up = upgradeInfo(state, id);
-      const colSig = state.colonists.map((c) => c.id + ':' + c.status + ':' + (c.assignedTo || '') + ':' + (c.profession || '')).join(',') + (state.resources.parts >= REPAIR_PARTS ? 'R' : 'r');
+      const colSig = state.colonists.map((c) => c.id + ':' + c.status + ':' + (c.assignedTo || '') + ':' + (c.profession || '')).join(',') + (hasParts(state, REPAIR_PARTS) ? 'R' : 'r');
       s = ['mod', id, m.type, m.level, moduleStatusKey(m), cache.up ? cache.up.nextLevel + '' + cache.up.ok + (cache.up.reason || '') : '-', m.staff && m.staff[0], confirm, colSig].join('|');
     }
     s += '|' + getLang() + '|' + JSON.stringify(ctx.getGuide()) + '|' + ctx.newSig() + '|' + ['assign', 'clean', 'toggle'].map((x) => (ctx.featureOn(x) ? 1 : 0)).join('') + (state.unlocked && state.unlocked.modules ? state.unlocked.modules.length : '');

@@ -6,13 +6,17 @@ import { newModule } from './state.js';
 import { isBuilt, levelSpec, peopleCapacity, headcount, batteryCapacity, effectiveCost, hasTech, healthLow } from './model.js';
 import { clearStaff } from './colonists.js';
 import { showPanel } from './alerts.js';
-import { hasKit, invAdd } from './crafting.js';
+import { hasKit, invAdd, isCraftEconomy, hasParts, payParts, hasItems, payItems } from './crafting.js';
+import { KIT_TYPES, CRAFT_BUILD_COST } from '../data/crafting.js';
+
+/** Craft economy: item cost of building a type without a kit recipe; null = it needs its kit. */
+export const craftBuildCost = (type) => (KIT_TYPES.includes(type) ? null : (CRAFT_BUILD_COST[type] || null));
 
 export const findSlot = (state, slotId) => state.slots.find((s) => s.id === slotId);
 
 /** Affordability of a cost object; returns an error key or null. */
 export function checkCost(state, cost) {
-  if ((cost.parts || 0) > state.resources.parts) return 'err.notEnoughParts';
+  if (!hasParts(state, cost.parts || 0)) return 'err.notEnoughParts'; // craft economy: iron bars
   if ((cost.regolith || 0) > state.resources.regolith) return 'err.notEnoughRegolith';
   return null;
 }
@@ -21,7 +25,7 @@ export function checkCost(state, cost) {
 export const levelCost = (state, type, level) => effectiveCost(state, MODULES[type].levels[level - 1].cost);
 
 function pay(state, mod, cost) {
-  state.resources.parts -= cost.parts || 0;
+  payParts(state, cost.parts || 0);
   state.resources.regolith -= cost.regolith || 0;
   mod.spent.parts += cost.parts || 0;
   mod.spent.regolith += cost.regolith || 0;
@@ -39,6 +43,7 @@ export function checkBuild(state, slotId, type) {
   if (def.requiresBuilt && !state.slots.some((s) => s.module && s.module.type === def.requiresBuilt && isBuilt(s.module))) return 'err.locked';
   if (def.unique && state.slots.some((s) => s.module && s.module.type === type)) return 'err.unique';
   if (hasKit(state, type)) return null; // crafting: a kit replaces the cost
+  if (isCraftEconomy(state)) { const c = craftBuildCost(type); return !c ? 'err.needKit' : hasItems(state, c) ? null : 'err.missingItems'; }
   return checkCost(state, levelCost(state, type, 1));
 }
 
@@ -61,6 +66,7 @@ export function actBuild(state, { slotId, moduleType }) {
   const sl = findSlot(state, slotId);
   const mod = newModule(moduleType, 1, 'building');
   if (hasKit(state, moduleType)) { invAdd(state, 'kit.' + moduleType, -1); mod.progress = 0.5; } // kit: no cost, half the time
+  else if (isCraftEconomy(state)) payItems(state, craftBuildCost(moduleType));
   else pay(state, mod, levelCost(state, moduleType, 1));
   sl.module = mod;
   return null;
@@ -86,7 +92,8 @@ export function actDemolish(state, { slotId }) {
     if (after < headcount(state)) return 'err.busy';
   }
   clearStaff(state, sl);
-  state.resources.parts += Math.floor(m.spent.parts * 0.5);
+  if (isCraftEconomy(state)) invAdd(state, 'ironBar', Math.floor(m.spent.parts * 0.5)); // upgrades were paid in iron bars
+  else state.resources.parts += Math.floor(m.spent.parts * 0.5);
   state.resources.regolith += Math.floor(m.spent.regolith * 0.5);
   sl.module = null;
   delete state.sim.shedAt[sl.id];

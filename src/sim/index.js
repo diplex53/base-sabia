@@ -194,8 +194,8 @@ function refreshRatesKeepEnergy(state) {
   state.rates.energyUse = energyUse;
 }
 
-export function createGame({ mode = 'colony', chapter = 0, seed = Date.now(), difficulty = 'commander', liveFlares, windowStart, liveWindowStart } = {}) {
-  const state = createInitialState({ mode, chapter, seed, difficulty });
+export function createGame({ mode = 'colony', chapter = 0, seed = Date.now(), difficulty = 'commander', economy = 'parts', liveFlares, windowStart, liveWindowStart } = {}) {
+  const state = createInitialState({ mode, chapter, seed, difficulty, economy });
   configureRealSun(state, liveFlares, windowStart ?? liveWindowStart); // Apêndice D.1
   stepEnvironment(state, 0);
   refreshRates(state);

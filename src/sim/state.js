@@ -3,6 +3,7 @@ import { TAU_CLEAR, TRANSIT_DOSE_MSV } from '../data/constants.js';
 import { TIME, SLOTS, START, SHIP, COLONIST_NAMES, MODULES, DIFFICULTY, PROFESSIONS, oldSlotToNew } from '../data/balance.js';
 import { seedToUint32, random } from './rng.js';
 import { CHAPTERS, STORY_FEATURES } from '../data/story.js';
+import { CRAFT_START_INV, CRAFT_START_MODULES } from '../data/crafting.js';
 
 export const STATE_VERSION = 4;
 
@@ -32,7 +33,16 @@ export function newColonist(state, { name, profession = null } = {}) {
 /** Empty events block (Apêndice B.2). `auto: false` stops the random draw (scheduled events still fire). */
 export const newEventsState = () => ({ last: { regional: null, global: null, spe: null }, scheduled: [], auto: true });
 
-export function createInitialState({ mode = 'colony', chapter = 0, seed, difficulty = 'commander' } = {}) {
+/** Craft economy bootstrap: free craftTable + drillBasic in the empty slots closest to the start modules, starter items. */
+function craftStart(state) {
+  const used = state.slots.filter((s) => s.module);
+  const dist = (s) => Math.min(...used.map((u) => Math.abs(u.gx - s.gx) + Math.abs(u.gz - s.gz)));
+  const free = state.slots.filter((s) => !s.module).sort((a, b) => dist(a) - dist(b));
+  CRAFT_START_MODULES.forEach((type, i) => { if (free[i]) free[i].module = newModule(type, 1, 'ok'); });
+  state.inv = { ...CRAFT_START_INV };
+}
+
+export function createInitialState({ mode = 'colony', chapter = 0, seed, difficulty = 'commander', economy = 'parts' } = {}) {
   if (!['colony', 'story'].includes(mode)) throw new Error(`unknown mode '${mode}'`);
   if (mode === 'story' && !CHAPTERS[chapter]) throw new Error(`unknown chapter '${chapter}'`);
   if (!DIFFICULTY[difficulty]) throw new Error(`unknown difficulty '${difficulty}'`);
@@ -94,6 +104,8 @@ export function createInitialState({ mode = 'colony', chapter = 0, seed, difficu
       facts: { cleaned: false, ended: [], expeditions: [], landed: 0, sheltered: [], recalled: [] } };
   } else for (let i = 0; i < start.colonists; i++) state.colonists.push(newColonist(state, { profession: PROFESSIONS[i % PROFESSIONS.length] }));
   state.stats.popPeak = state.colonists.length;
+  state.economy = !chapterDef && economy === 'craft' ? 'craft' : 'parts'; // story mode is always 'parts'
+  if (state.economy === 'craft') craftStart(state);
   return state;
 }
 
@@ -133,6 +145,7 @@ export function migrateState(state) {
   if (state.resources.methane === undefined) state.resources.methane = 0;
   if (state.health === undefined) state.health = 100;
   if (!state.inv || typeof state.inv !== 'object') state.inv = {};
+  if (!state.economy) state.economy = 'parts';
   if (state.mode !== 'story' && state.tech && state.tech.unlocked.includes('robotics') && !state.unlocked.modules.includes('drillAdvanced')) state.unlocked.modules.push('drillAdvanced');
   if (state.stats.domeAt === undefined) state.stats.domeAt = null;
   // E.4: colony saves from before the expansion get the modules that need no tech

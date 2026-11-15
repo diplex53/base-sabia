@@ -214,10 +214,13 @@ export function createHud(ctx) {
       setAttr(r.root, 'title', t('res.' + k) + (k === 'energy' ? ' (' + t('ui.tipKwh') + ')' : ''));
     }
     for (const k of ['regolith', 'parts', 'science']) {
-      setText(subs[k].label, t('res.' + k));
-      setText(subs[k].val, fmt(state.resources[k], 0));
-      setAttr(subs[k].root, 'title', t('res.' + k + 'Short'));
-      setAttr(subs[k].root, 'aria-label', t('res.' + k) + ': ' + fmt(state.resources[k], 0));
+      const bars = k === 'parts' && state.economy === 'craft'; // craft economy: the parts chip shows iron bars
+      const kk = bars ? 'ironBars' : k;
+      const v = bars ? Math.floor(((state.inv && state.inv.ironBar) || 0) + 1e-9) : state.resources[k];
+      setText(subs[k].label, t('res.' + kk));
+      setText(subs[k].val, fmt(v, 0));
+      setAttr(subs[k].root, 'title', t('res.' + kk + 'Short'));
+      setAttr(subs[k].root, 'aria-label', t('res.' + kk) + ': ' + fmt(v, 0));
     }
     // colony health (Appendix E.3): only when the core provides it
     const hasHealth = typeof state.health === 'number';
