@@ -6,6 +6,7 @@ import e6 from './en6.js';
 import e5 from './en5.js';
 import e4 from './en4.js';
 import e3 from './en3.js';
+import e12 from './en12.js';
 export default {
   // general
   'ui.title': 'Base Sabiá',
@@ -262,4 +263,5 @@ export default {
   ...e8,
   ...e9,
   ...e10,
+  ...e12,
 };

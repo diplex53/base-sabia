@@ -66,6 +66,7 @@ export function createInitialState({ mode = 'colony', chapter = 0, seed, difficu
     realSun: null,
     stats: { popPeak: 0, panelsSeen: [], selfSufficientAt: null, domeAt: null },
     health: 100, // Apêndice E.3
+    inv: {}, // crafting: ores, items and kits (missing key = 0)
     over: null,
     // Core bookkeeping (not part of the UI contract): step remainder, id counters,
     // which alerts are currently raised, when each module was shed, milestone streak.
@@ -125,6 +126,8 @@ export function migrateState(state) {
   if (!state.difficulty) state.difficulty = 'commander';
   if (state.resources.methane === undefined) state.resources.methane = 0;
   if (state.health === undefined) state.health = 100;
+  if (!state.inv || typeof state.inv !== 'object') state.inv = {};
+  if (state.mode !== 'story' && state.tech && state.tech.unlocked.includes('robotics') && !state.unlocked.modules.includes('drillAdvanced')) state.unlocked.modules.push('drillAdvanced');
   if (state.stats.domeAt === undefined) state.stats.domeAt = null;
   // E.4: colony saves from before the expansion get the modules that need no tech
   if (state.mode !== 'story') for (const t of START.colony.unlocked) if (!state.unlocked.modules.includes(t)) state.unlocked.modules.push(t);

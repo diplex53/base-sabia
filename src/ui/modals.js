@@ -7,6 +7,7 @@ import { createNotebookContent } from './notebook.js';
 import { createSunWidget } from './sunWidget.js';
 import { colonyProgress } from './progress.js';
 import { nasaDataNodes } from './nasaData.js';
+import { craftNodes, craftSig, inventoryNodes, inventorySig } from './crafting.js';
 
 const FOCUSABLE = 'button:not([disabled]), a[href], select, input:not([disabled]), [tabindex]:not([tabindex="-1"])';
 let techSel = null; // selected node in the technology tree (survives re-renders)
@@ -428,6 +429,8 @@ export function createModals(root, ctx) {
     openShipDecisionNow() { if (!decisionModal) showShipDecisionNow(); },
     showShipLanded(info) { enqueue(() => showLandedNow(info)); },
     showTech() { openLive(techNodes, techSig, { wide: true, className: 'tech-modal', label: () => t('ui.techTitle') }); },
+    showCraft() { openLive((mm) => craftNodes(mm, ctx, () => close(mm)), craftSig, { wide: true, className: 'craft-modal', label: () => t('craft.title') }); },
+    showInventory() { openLive((mm) => inventoryNodes(mm, ctx, () => close(mm)), inventorySig, { wide: true, className: 'craft-modal', label: () => t('inv.title') }); },
     showExpedition(siteId) {
       const pick = { id: null };
       openLive((mm) => expeditionNodes(mm, siteId, pick), (s) => expSig(s, siteId), { label: () => t('ui.expTitle', { site: t('site.' + siteId) }) });

@@ -6,6 +6,7 @@ import p6 from './pt6.js';
 import p5 from './pt5.js';
 import p4 from './pt4.js';
 import p3 from './pt3.js';
+import p12 from './pt12.js';
 export default {
   // geral
   'ui.title': 'Base Sabiá',
@@ -262,4 +263,5 @@ export default {
   ...p8,
   ...p9,
   ...p10,
+  ...p12,
 };

@@ -6,6 +6,8 @@ import {
   peopleCapacity, crewUse, headcount as headcountOf, activeCount, storageCap, isBuilt,
 } from './model.js';
 import { checkBuild, checkUpgrade, findSlot, levelCost } from './build.js';
+import { RECIPES } from '../data/crafting.js';
+import { checkCraft, stationError, hasKit } from './crafting.js';
 
 // Phase 3 selectors (Apêndice B.6 / B.7), implemented next to their systems.
 export { techOptions } from './tech.js';
@@ -115,8 +117,24 @@ export function buildOptions(state, slotId) {
   return Object.keys(MODULES).map((type) => {
     const l1 = MODULES[type].levels[0];
     const reason = checkBuild(state, slotId, type);
-    return { type, cost: levelCost(state, type, 1), buildSols: l1.buildSols, ok: !reason, reason };
+    const kit = hasKit(state, type);
+    return { type, cost: levelCost(state, type, 1), buildSols: kit ? l1.buildSols / 2 : l1.buildSols, ok: !reason, reason, kit };
   });
+}
+
+/** Crafting recipes with what is missing: { id, station, in, out, ok, reason, stationOk }. */
+export function craftOptions(state) {
+  return RECIPES.map((r) => {
+    const reason = checkCraft(state, r.id, 1);
+    return { id: r.id, station: r.station, in: { ...r.in }, out: { ...r.out }, ok: !reason, reason, stationOk: !stationError(state, r.station) };
+  });
+}
+
+/** Non-zero inventory entries (ores, items, kits) as { key: count }. */
+export function inventory(state) {
+  const out = {};
+  for (const [k, v] of Object.entries(state.inv || {})) if (v > 0) out[k] = v;
+  return out;
 }
 
 /** Next-level upgrade info, or null when the slot is empty or already at max level. */
