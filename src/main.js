@@ -12,6 +12,9 @@ import { getSol } from './sim/selectors.js';
 import { loadSunToday } from './net/donkiLive.js';
 import { createStory, createObjectiveCard, sceneIds } from './ui/story.js';
 import { currentGuide, guideSlots, createNewTracker, featureOn } from './ui/storyGuide.js';
+import { createAutoplay, DEMO_SEED, DEMO_DIFFICULTY } from './demo/autoplay.js';
+let demo = null; // presentation mode (created after the modals); never reads or writes the save
+const demoOn = () => !!(demo && demo.active);
 
 const SAVE_KEY = 'baseSabia.save.v1';
 function readSave() {
@@ -23,13 +26,14 @@ function readSave() {
   } catch (e) { return null; }
 }
 function writeSave(g) {
+  if (demoOn()) return;
   try {
     const st = g.state;
     if (st.over || (st.story && st.story.complete)) return;
     localStorage.setItem(SAVE_KEY, JSON.stringify({ v: 1, mode: st.mode || 'colony', chapter: st.story ? st.story.chapter : null, difficulty: st.difficulty || 'cadet', sol: getSol(st), savedAt: Date.now(), data: g.serialize() }));
   } catch (e) { /* storage full or blocked: the game goes on */ }
 }
-function clearSave() { try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* ignore */ } }
+function clearSave() { if (demoOn()) return; try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* ignore */ } }
 
 const force2d = new URLSearchParams(location.search).get('view') === '2d';
 const readBool = (k, d) => { try { const v = localStorage.getItem(k); return v === null ? d : v === '1'; } catch (e) { return d; } };
@@ -87,6 +91,7 @@ const ctx = {
   openGlossary: () => modals.showGlossary(),
   openNasaData: () => modals.showNasaData(),
   startColony,
+  startDemo: () => startDemo(),
   openSite,
   startStory,
   retryStory: () => { const n = game.state.story ? game.state.story.chapter : 1; startStory(n, { skipIntro: true }); },
@@ -116,12 +121,50 @@ const hud = createHud(ctx);
 const slotPanel = createSlotPanel(document.getElementById('slot-panel'), ctx);
 const colPanel = createColonistPanel(document.getElementById('colonists-panel'));
 
+// ---- presentation mode (fixed seed, plays itself, no save)
+demo = createAutoplay({
+  getGame: () => game,
+  modalsOpen: () => modals.isOpen(),
+  closeModals: () => modals.closeAll(),
+  openTech: () => modals.showTech(),
+  showScience: (id) => modals.showScience(id, { spe: lastSpe || (game.state.env && game.state.env.spe) }),
+  onExit: () => exitDemo(),
+  onReplay: () => startDemo(),
+  onPlay: () => { exitDemo({ toStart: false }); startColony('cadet'); },
+});
+function startDemo() {
+  if (demo.active) demo.stop();
+  modals.closeAll();
+  game = createGame({ mode: 'colony', seed: DEMO_SEED, difficulty: DEMO_DIFFICULTY });
+  selected = null;
+  if (view) view.setSelected(null);
+  hud.reset();
+  resetStoryUi();
+  overShown = false;
+  lastSpe = null;
+  speed = 1;
+  started = true;
+  setLaunchScreen(false);
+  demo.start();
+}
+function exitDemo({ toStart = true } = {}) {
+  demo.stop();
+  modals.closeAll();
+  started = false;
+  speed = 0;
+  game = createGame({ mode: 'colony', seed: Date.now() });
+  hud.reset();
+  resetStoryUi();
+  if (toStart) modals.showStart();
+}
+
 function slotScience(id) {
   const slot = game.state.slots.find((s) => s.id === id);
   if (started && slot && slot.module) modals.showModuleScience(slot.module.type);
 }
 
 function select(id) {
+  if (demoOn()) return;
   selected = id;
   if (view) view.setSelected(id);
   hud.showTab('slot');
@@ -212,7 +255,7 @@ function continueGame() {
 }
 
 function openSite(id) {
-  if (!started || game.state.over) return;
+  if (!started || game.state.over || demoOn()) return;
   if (!featureOn(game.state, 'expeditions')) { toast(t('err.locked')); return; }
   modals.showExpedition(id);
 }
@@ -251,6 +294,11 @@ async function fallbackTo2d(err) {
 const pausing = () => { if (settings.autoPause) setSpeed(0); };
 function handleEvents(events, state) {
   for (const ev of events) {
+    if (demoOn()) { // the demo answers its own decisions; only remember the flare and pass science panels on
+      if (ev.type === 'event.start' && ev.kind === 'spe') lastSpe = { donkiId: ev.donkiId, classType: ev.classType, peakTime: ev.peakTime, link: ev.link };
+      else if (ev.type === 'science.panel' && !String(ev.id).startsWith('over.')) demo.onScience(ev.id);
+      continue;
+    }
     switch (ev.type) {
       case 'sol.start':
         if (started) writeSave(game);
@@ -332,7 +380,7 @@ function handleEvents(events, state) {
   }
 }
 function showOver(state) {
-  if (overShown) return;
+  if (overShown || demoOn()) return;
   overShown = true;
   clearSave();
   modals.showOver(state.over || { reason: 'noCrew', score: 0 }, state);
@@ -385,9 +433,11 @@ function frame(now) {
   try {
     const state = game.state;
     const eff = ctx.isHeld() ? 0 : speed;
-    if (eff > 0) game.tick((dtReal * eff) / TIME.SOL_REAL_SECONDS);
+    if (demoOn()) demo.update(dtReal);
+    else if (eff > 0) game.tick((dtReal * eff) / TIME.SOL_REAL_SECONDS);
     const events = game.drainEvents();
     handleEvents(events, game.state);
+    if (demoOn()) demo.onEvents(events);
     if (game.state.over && !overShown) showOver(game.state);
     const s = game.state;
     tracker.update(s);
@@ -413,7 +463,7 @@ window.addEventListener('keydown', (e) => {
   if (e.ctrlKey || e.metaKey || e.altKey) return;
   const tag = e.target && e.target.tagName;
   if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
-  if (modals.isOpen()) return;
+  if (modals.isOpen() || demoOn()) return;
   if (e.code === 'Space') {
     e.preventDefault();
     if (e.repeat) return;
@@ -435,6 +485,6 @@ if (window.ResizeObserver) new ResizeObserver(() => document.documentElement.sty
 applyStatic();
 loadSunToday();
 onLangChange(() => { applyStatic(); document.title = t('ui.title'); });
-modals.showStart();
+if (new URLSearchParams(location.search).get('demo') === '1') startDemo(); else modals.showStart();
 mountView().catch((e) => console.error(e));
 requestAnimationFrame(frame);

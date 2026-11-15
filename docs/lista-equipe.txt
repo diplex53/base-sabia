@@ -1,0 +1,171 @@
+
+
+*Alterações necessárias:
+Expandir o mapa 2.500x
+*Colocar o jogo em inglês 
+*Ter uma descrição científica para cada estação 
+*criar um presurizador, um controle térmico, uma estufa para jardinagem, uma mina e um domo para separar a base do resto do mundo, academia. 
+
+Pressurizador: um equipamento responsável por manter a pressão atmosférica adequada dentro de uma base em Marte para a sobrevivência humana semelhante a da terra,manter a quantidade certa de moléculas de oxigênio por volume e prevenir ebulição de líquidos como a água e o sangue. São compostos por bombas mecânicas que puxam o gás produzido pelas usinas de oxigênio,eles comprimem esse gás a pressões adequadas para humanos
+
+Controle termico: O sistema de controle termico consegue regular a temperatura da base utilizando  aquecedores elétricos e radiadores térmicos. Também resfria utilizando fluidos refrigerantes, ventilação forçada e trocadores de calor, que removem o excesso de energia térmica. Eles possuem sensores para identificar anormalidades na temperatura e corrigem.
+
+Estufas: locais com luz (entre a faixa do azul e vermelho para gerar um crescimento mais rápido e mais fotossíntese)oxigênio e água necessária para o crescimento de plantas de forma rápida necessária para alimentação e manter a saúde.
+
+Minas (robôs de escavação): Perfura o solo de Marte usando robôs (rovers) para aproveitar os recursos naturais do planeta sem expor os astronautas à radiação. Sendo essencial para extrair água em forma de gelo para ser filtrado por filtros e para outros trabalho. Além disso extrai minérios para construção de estações.
+
+O Domo FAOP (Fibra de Carbono, Aerogel de Sílica, Óxido de Alumínio e Polietileno) é um sistema de proteção avançado, composto por placas hexagonais que combinam diferentes materiais tecnológicos. Sua função é auxiliar no controle da temperatura e da pressão interna, além de reduzir a exposição à radiação espacial. A fibra de carbono é responsável pela resistência estrutural, garantindo maior estabilidade e proteção ao domo, tornando-o adequado para ambientes extremos, como o planeta Marte.
+
+Academia: local para treino tecnológico necessário para os astronautas e outros tripulantes manterem sua saúde por meio de treinos evitando assim a atrofia muscular e mantendo a saúde
+
+*criar narrador: narrador que conta uma sequência de eventos, diagrama que utiliza pontos de ciência para novas tecnologias, objetivos final: colonizar Marte/domo/cidade para os humanos
+
+*criar escudo anti-radiação 
+
+Sistema anti radiação:
+Consiste em um revestimento ao domo que utiliza materiais que ofereçam maior proteção contra a radiação sendo uma solução mais barata que outras elementos baseados em hidrogênio como nanotubos de nitreto de boro hidrogenado (BNTTs) é um material que atende as características nescessárias pois como tem prótons e nêutrons de tamanho extremamente semelhante consegue bloquear radiação liberada constantemente do sol e também de explosões solares.
+
+*câmara de descontaminação
+
+Camara de descontaminação: é uma sala que utiliza escudos eletrodinâmicos repelindo a poeira eletricamente carregadas com radiação assim evitando a entrada da de poeira e radiação.
+
+*criar fábrica de produtos avançados
+
+Fabrica de produtos avançados: Uma fábrica utilizada pra criar recursos de alta tecnologia (isolantes térmicos, absorvedores de UV, robôs avançados, etc)
+
+*armazém
+
+Armazém: armazena itens de forma adequada em relação a radiação, temperatura e pressão, garantindo a qualidade de recursos e aumentando o armazenamento
+
+*Hud completo
+*hud de progresso do domo faop
+*hud de estatísticas gerais da cidade
+
+*MOXIE: puxa os 95% de CO₂ da atmosfera de Marte e transforma em oxigênio usado para manter as pessoas, estufas e outras atividades.
+
+*Filtro de água: filtra a água extraída para ser potável para um consumo humano adequado
+
+*Hospital: local importante para tratar doenças e problemas de saúde dos tripulantes
+
+*Casa: Espaço pra vivência humana. Ocupa uma família
+
+*Prédio: Espaço para vivência humana. Ocupa 10 famílias
+
+*Estação de síntese de metano: usa a reação de sabatier para transformar hidrogênio e gás carbônico em água, metano e energia sendo útil para produção de energia noturna e caso as placas solares estejam sujas com a areia.
+
+*usaremos o esc para pausar no jogo, após isso aparece  
+Continuar
+Salvar
+Sair do jogo 
+Se "continuar" for apertado o jogo volta normalmente 
+Se "sair do jogo" for apertado, volte a tela
+
+*recursos do jogo e onde encontrar os recursos
+
+*Painel solar produz 500 kw 
+Broca simples gasta 10 kw
+Broca avançada gasta 200 kw
+
+*Crie um menu para o nosso jogo com base nessa imagem.  Está vendo esse retangulo preto de canetão? Essa é a simulação da tela do dispositivo que a pessoa estará jogando. No canto esquerdo da tela coloque uma área chamada qualidade de vida que vai ter uma barra em cima que vai de 0% a 100% indicando a saúde geral do nosso domo. Quando o domo estiver no máximo a saúde vai diminuir 30% mais lento. Dentro dessa área tem uma barra que vai de 0% a 100% que indica a fome da população dentro do domo. Quanto mais essa barra aumentar, mais a barra de qualidade de vida diminui. No inicio do jogo essa barra vai estar em 0%. Quando a barra de fome estiver em 100% a população vai diminuir em 10% a cada 7 dias e a velocidade de construção e mineração em geral vai diminuir em 100%. A barra de fome diminui de acordo com a quantidade de consumo de comida que tem na base. A barra de fome aumenta de acordo quando a produção de comida é maior do que o consumo, a cada 1kg produzido a mais de comida do que a quantidade consumida vai aumentar em 0,5% por dia.
+Dentro dessa mesma área vai ter uma barra de saude que vai de 0% a 100%. No inicio do jogo ela estara em 100%. Quanto mais perto de 0% mais a barra de qualidade de vida diminui. Quando ela chegar em 0% a população vai diminuir em 10% da população total ao dia. A cada dia a barra de saúde aumenta em 0,02% pela quantidade de academias que existem dentro do domo.
+
+*A cada dia a barra de saúde diminui progressivamente de acordo com a quantidade de dias que já se passaram no jogo. Quando passar 0 dias no total a barra diminui em 0,02% por dia, quando passar 100 dias no total a barra diminui em 0,05% por dia, quando passar 300 dias no total a barra diminui em 0,1% por dia, e quando passar de 1000 dias no total a barra diminui em 0,5% por dia.Nessa mesma área vai ter uma barra de água. Essa barra vai de 0(mínimo) e não tem limite. No inicio do jogo tera 15L nela. Essa barra diminui em 1 a cada  50 pessoas na população total por dia. Essa barra aumenta por dia em 5 a cada 1 filtro de água no mapa. Caso a barra de água chegue a zero, todo mundo morre em 5 dias. Crie uma proporção pra barra de qualidade de vida diminuir de acordo com a quantidade de água, igualmente as outras barras na qualidade de vida
+
+*Dentro dessa mesma área vai ter uma barra q mede a temperatura em °C. Essa barra vai de -100°C a 100°C sendo a temperatura ideal de 15°C a 25°C. Quando você iniciar um novo jogo a temperatura dentro do nave estará em 24°C. Porém, para você construir o domo você ira nescessitar de um sistema de controle térmico para manter a temperatura dentro do ideal. Você so ira nescessitar de 1 sistema de controle termico para manter na temperatura ideal. Caso saia dessa temperatura ideal as fazendas irão funcionar 50% mais lento e a cada dia tem 1 em 3 de chance de uma pessoa da populacao morrer.Dentro dessa mesma área vai ter uma barra de oxigênio que vai ser indicada por O₂. Essa barra vai de 0(mínimo) e não tem limite. Quando começar o jogo essa barra vai estar em 10. Essa barra diminui em 0,05 a cada 50 pessoas na população total por dia. Quando essa barra chegar a 0 população total irá morrer. A barra vai aumentar em 0,5 a cada grupo de moxies no mapa por dia. Crie uma proporção pra barra de qualidade de vida diminuir de acordo com a quantidade de oxigênio, igualmente as outras barras na área de qualidade de vida.
+
+*No canto superior direito ira ter uma outra area sobre as estatisticas gerais da cidade. Essa area vai ter uma barra medindo a radiacao de 0 a 100. Essa barra de radiacao aumentara em 1 a cada 20 dias mas de 200 em 200 dias o crescimento diario aumentara em 0,5 o maximo que o crescimento diario pode chegar e 10. Ex: no dia 20 ira aumentar 1, no dia 220 ira aumentar 1,5 e assim por diante. Essa barra de radiacao ira diminuir em 0,4 a cada 15 dias por cada camara de descontaminacao no mapa.
+
+*Crie um botao pequeno no topo da tela com um I no meio que quando se clicar, abre um menu com a seguinte coisa escrito dentro
+'Banco de Dados de Notificações, Conhecimento e Informações sobre Clima Espacial (DONKI) : Dados reais e atualizados regularmente sobre erupções solares, ejeções de massa coronal e outros eventos de clima espacial que representam risco de radiação para astronautas e espaçonaves. Útil para fundamentar qualquer mecanismo de proteção contra radiação, interrupção de comunicações ou risco de missão em condições reais e atuais, em vez de números inventados.
+https://ccmc.gsfc.nasa.gov/tools/DONKI/
+
+Repositório de Dados Científicos Abertos da NASA (OSDR) : ( API de busca ) Arquivo público da NASA com pesquisas sobre biologia espacial e saúde de astronautas, incluindo estudos sobre como os voos espaciais afetam a densidade óssea, a massa muscular, a resposta imunológica, o sono e muito mais em diversos organismos. A busca pode ser feita por palavra-chave, tornando-o ideal para ferramentas que buscam exibir pesquisas científicas publicadas pela NASA relevantes para os impactos na saúde humana no espaço.
+https://osdr.nasa.gov/bio/repo/search?q=&data_source=cgene,alsda,esa&data_type=study ' 
+Faca com que quando o jogador apertar o botao 'V' ele voltara pra base inicial
+
+*Crie uma forma de que quando apertar 'M' voce ira abrir o menu de crafting. Nesse menu ira ter os craftings dos itens do nosso jogo com base nos recursos que iremos pegar. Certos craftings so serao possiveis de criar quando ter a construtora de modulos. Crafts a seguir
+Mesa de Produção (crafts possiveis de criar com ela ate a parte escrito construtora de modulos)
+3 Ferro produz 1 Barra de Ferro
+3 Ferro produz 2 Engrenagens
+3 Ferro + 1 Níquel produz 1 Barra de Ferro Reforçada
+2 Cobre produz 1 Fio
+4 Regolito + 1 Enxofre produz 1 Cimento de Enxofre
+2 Silício produz 1 Placa de Silício
+3 Silício produz 1 Vidro Temperado
+3 Silício + 1 Água produz 1 Aerogel de Silício
+2 Alumínio + 2 Água produz 1 Óxido de Alumínio
+3 Carbono + 1 Gás Metano produz 1 Fibra de Carbono
+2 Gás Metano + 1 Água produz 1 Polietileno
+3 Titânio produz 1 Haste de Titânio
+4 Tungstênio produz 1 Cabeçote de Tungstênio
+3 Boro + 1 Carbono produz 1 Nanotubo de Boro
+2 Lítio + 1 Cobalto produz 1 Bateria Avançada
+2 Ouro + 1 Silício produz 1 Microchip de Ouro
+2 Barra de Ferro + 2 Engrenagens + 1 Fio produz 1 Broca Básica
+3 Haste de Titânio + 2 Cabeçote de Tungstênio + 3 Fibra de Carbono + 2 Bateria Avançada produz 1 Broca Avançada
+6 Barra de Ferro + 4 Engrenagens + 4 Fio + 4 Cimento de Enxofre produz 1 Construtora de Módulos
+3 Vidro Temperado + 2 Barra de Ferro + 2 Cimento de Enxofre produz 1 Estufa
+4 Barra de Ferro + 4 Fio + 3 Placa de Silício + 2 Óxido de Alumínio produz 1 MOXIE
+Construtora de Módulos (so e possivel criar os itens abaixo dela quando tiver uma construtora de modulos no mapa)
+6 Placa de Silício + 4 Fio + 4 Barra de Ferro + 2 Vidro Temperado produz 1 Painel Solar
+10 Cimento de Enxofre + 6 Barra de Ferro + 4 Polietileno produz 1 Armazém
+6 Barra de Ferro Reforçada + 5 Fio + 4 Óxido de Alumínio + 6 Cimento de Enxofre produz 1 Reator de Sabatier
+6 Bateria Avançada + 4 Barra de Ferro Reforçada + 4 Fio + 2 Aerogel de Silício produz 1 Reserva Energética
+6 Barra de Ferro Reforçada + 5 Engrenagens + 5 Fibra de Carbono + 4 Polietileno produz 1 Academia
+6 Aerogel de Silício + 5 Fio + 3 Cabeçote de Tungstênio + 3 Microchip de Ouro produz 1 Controle Térmico
+6 Óxido de Alumínio + 5 Polietileno + 5 Fio + 3 Microchip de Ouro + 2 Bateria Avançada produz 1 Câmara de Descontaminação
+6 Barra de Ferro Reforçada + 5 Vidro Temperado + 4 Microchip de Ouro + 3 Bateria Avançada produz 1 Hospital
+8 Nanotubo de Boro + 6 Polietileno + 6 Barra de Ferro Reforçada + 5 Haste de Titânio + 2 Bateria Avançada produz 1 Sistema Anti Radiação
+25 Polietileno + 20 Fibra de Carbono + 15 Aerogel de Silício + 12 Óxido de Alumínio + 8 Vidro Temperado produz 1 Domo
+
+*Crie uma mecanica de energia no jogo em KW. tenha nocao de que o consumo e o ganho de energia vai se basear nessas estruturas. Caso acabe a energia as maquinas pararao de funcionar
+Estrutura	                                     geração (kW)	     
+Painel Solar	                                      +20 kW	           
+Reator de Sabatier	                     +50 kW	           
+Armazém	                                      -1 kW	                  
+Mesa de Produção	                       -2 kW	                          
+Pressurizador	                               -3 kW
+MOXIE	                                               -3 kW	
+Construtora de Módulos	              -3 kW	
+Academia	                                      -4 kW	
+Estufas	                                              -5 kW	
+Hospital	                                              -6 kW
+Câmara de Descontaminação	      -7 kW	
+Sistema Anti Radiação	              -8 kW	
+Controle Térmico	                            -10 kW
+Reserva Energética                           +1kW
+Domo                                                     0kW
+Broca Avançada                                -5 kW
+Broca Básica                                      -2 kW
+
+*Faça com que quando clica com o botao direito do mouse em cima de uma construçao vai aparecer a descricao dela
+MOXIE: puxa os 95% de CO₂ da atmosfera de Marte e transforma em oxigênio usado para manter as pessoas, estufas e outras atividades.
+Pressurizador: um equipamento responsável por manter a pressão atmosférica adequada dentro de uma base em Marte para a sobrevivência humana semelhante à da terra, manter a quantidade certa de moléculas de oxigênio por volume e prevenir ebulição de líquidos como a água e o sangue. São compostos por bombas mecânicas que puxam o gás produzido pelas usinas de oxigênio, eles comprimem esse gás a pressões adequadas para humanos
+Academia: local para treino tecnológico necessário para os astronautas e outros tripulantes manterem sua saúde por meio de treinos evitando assim a atrofia muscular e mantendo a saúde
+Estufas: locais com luz (entre a faixa do azul e vermelho para gerar um crescimento mais rápido e mais fotossíntese) oxigênio e água necessária para o crescimento de plantas de forma rápida necessária para alimentação e manter a saúde.
+Controle térmico: O sistema de controle térmico consegue regular a temperatura da base utilizando aquecedores elétricos e radiadores térmicos. Também resfria utilizando fluidos refrigerantes, ventilação forçada e trocadores de calor, que removem o excesso de energia térmica. Eles possuem sensores para identificar anormalidades na temperatura e corrigem
+Filtro de água: filtra a água extraída para ser potável para um consumo humano adequado
+Sistema antirradiação:
+Consiste em um revestimento ao domo que utiliza materiais que ofereçam maior proteção contra a radiação sendo uma solução mais barata que outros elementos baseados em hidrogênio como nanotubos de nitreto de boro hidrogenado (BNTTs) é um material que atende as características nescessárias pois como tem prótons e nêutrons de tamanho extremamente semelhante consegue bloquear radiação liberada constantemente do sol e também de explosões solares.
+Hospital: local importante para tratar doenças e problemas de saúde dos tripulantes
+Câmara de descontaminação: é uma sala que utiliza escudos eletrodinâmicos repelindo a poeira eletricamente carregadas com radiação assim evitando a entrada da de poeira e radiação.
+Reator de sabatier : e essencial para a produção de metano e agua usando hidrogênio e gás carbônico além disso gera energia no processo por meio de um catalizador de níquel alta pressão e temperatura e isso gera a reação CO₂+4H₂=CH₄+2H₂O
+
+*Faca um sistema que as seguintes estacoes coletarao recursos de acordo com as especificacoes
+Broca Básica
+
+Regolito: 5 unidades
+Ferro, Cobre, Silício, Alumínio, Enxofre, Carbono:  3 unidades
+produz a cada 20 segundos
+
+Broca Avançada 
+
+Regolito: 8 unidades
+Ferro, Cobre, Silício, Alumínio, Enxofre, Carbono:  5 unidades
+Titânio, Lítio, Níquel, Cobalto, Água, Gás Metano: 3 unidades
+Tungstênio, Boro, Ouro: 2 unidades
+produz a cada 20 segundos
+
+Reator de Sabatier (+50 kW)
+
+Geração Automática: +1 Água e +1 Gás Metano a cada 20 segundos
