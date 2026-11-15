@@ -762,6 +762,45 @@ Lista cada conjunto de dados usado, o que ele decide no jogo e o link: DONKI (te
 
 Dois painéis novos com um dado real de cada recurso da aba Resources (dose medida na ISS; um achado de saúde de astronautas). Os fatos vêm de um subagente de pesquisa; só entram com fonte aberta e conferida.
 
+## Apêndice E — Expansão pedida pela equipe (dom 15/11, 9h10; vinculante)
+
+Regra de segurança: a versão estável está na etiqueta git `estavel-0910`. Só publica o que passar nos testes e abrir sem erro; senão volta para a etiqueta.
+
+### E.1 Mapa
+
+`SLOTS` passa a 36 (grade 6×6), ids `s1`..`s36`, `gx`/`gz` de 0 a 5, `s1` = (0,0), numeração por linhas. Centro do mundo: `x = (gx − 2.5)·CELL`. Base inicial da colônia: habitat `s15`, painel `s16`, bateria `s21`. Capítulos da história remapeados para o centro.
+
+### E.2 Novos módulos (`MODULES`, 3 níveis salvo indicação; custos e consumos em `balance.js`, todos `// ASSUMPTION:` de jogo)
+
+| type | Efeito |
+|---|---|
+| `gym` | saúde da colônia +1,0/sol por nível (astronautas da ISS treinam cerca de 2 h por dia para não perder músculo e osso) |
+| `hospital` | saúde +0,5/sol por nível; com hospital, o colono só é afastado em 650 mSv? NÃO: o limite não muda; hospital dobra a recuperação quando saúde < 50 |
+| `thermal` | consumo de energia dos habitats −15% por nível (máx. −45%) |
+| `pressurizer` | +2 vagas de tripulação por nível |
+| `waterFilter` | produção dos extratores +20% por nível (máx. +60%) |
+| `decon` | chance de falha de equipamento −25% por nível; poeira nos painéis −10% por nível |
+| `warehouse` | capacidade de O2, água e comida +100% da base por nível |
+| `factory` | converte 2 regolito → 1 peça, até 3/6/10 peças por sol |
+| `sabatier` | gasta 1 kg de água por sol por nível e produz `methane`; à noite ou com bateria < 20% queima metano e gera 30/60/100 kWh/sol. Não cria energia do nada: o metano é energia guardada de dia |
+| `mine` | robôs: +4/8/14 regolito e +1/2/4 peças por sol, sem dose para ninguém |
+| `dome` | único, 1 nível, megaprojeto: custo 300 peças + 400 regolito, 20 sols de obra, exige a tecnologia `domeEngineering`. Pronto: blindagem de radiação cósmica dos habitats × 0,85, evento `milestone { id: 'dome' }`, +2000 pontos |
+| `radShield` | único, exige `dome` pronto e a tecnologia `hydrogenShield`: blindagem × 0,7 adicional |
+
+Capacidades base: O2 200 kg, água 400 kg, comida 300 kg (acima disso o excedente se perde). Recurso novo `methane`.
+
+### E.3 Saúde da colônia
+
+`state.health` 0..100, começa em 100. Cai 0,5/sol (falta de exercício em gravidade baixa, 38% da Terra) e mais 2/sol enquanto comida ou água estiverem zeradas. Sobe com `gym` e `hospital`. Abaixo de 50: sem bônus de alocação e obras 25% mais lentas; alerta `alert.healthLow`. Em 0: `game.over` com `reason: 'health'` (missão abortada). No nível Cadete a queda é a metade. Painel `muscleLoss` na primeira vez abaixo de 70.
+
+### E.4 Tecnologias novas
+
+`domeEngineering` (custo 90, requer `regolithPrinting`), `hydrogenShield` (custo 80, requer `domeEngineering`), `sabatierProcess` (custo 30, libera `sabatier`), `robotics` (custo 30, libera `mine` e `factory`).
+
+### E.5 Seletores e estado
+
+`cityStats(state) -> { population, crewCapacity, health, powerGen, powerUse, storage: { o2, water, food } com { amount, cap }, modules: n, techs: n, domeProgress: 0..1 | null }`. `capacity(state)` ganha `o2`, `water`, `food`.
+
 ### A.7 Donos de arquivo na Fase 1
 
 | Agente | Arquivos |
