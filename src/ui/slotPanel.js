@@ -234,6 +234,7 @@ export function createSlotPanel(root, ctx) {
     s += '|' + getLang() + '|' + JSON.stringify(ctx.getGuide()) + '|' + ctx.newSig() + '|' + ['assign', 'clean', 'toggle'].map((x) => (ctx.featureOn(x) ? 1 : 0)).join('') + (state.unlocked && state.unlocked.modules ? state.unlocked.modules.length : '');
     if (s !== sig) {
       sig = s;
+      root.classList.toggle('slot-empty', !(slot && slot.module));
       if (!slot) { closePopup(); rebuild(viewNone); }
       else if (!slot.module) { rebuild(() => viewEmpty(slot)); renderPopup(slot); }
       else { closePopup(); rebuild(() => viewModule(slot, state)); }

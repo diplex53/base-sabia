@@ -167,7 +167,8 @@ function select(id) {
   if (demoOn()) return;
   selected = id;
   if (view) view.setSelected(id);
-  hud.showTab('slot');
+  const sl = id && game.state.slots.find((s) => s.id === id);
+  hud.showTab(sl && sl.module ? 'slot' : '');
 }
 
 let colonyStarting = false;
