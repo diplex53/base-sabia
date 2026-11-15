@@ -1371,10 +1371,10 @@ test('conjunction: blackout timing, events, panel, no warning without the tech, 
 
 // ---------- Apêndice E: expansion ----------
 const slotAt = (s, id) => s.slots.find((x) => x.id === id);
-test('E.1 map: 36 slots in a 6x6 grid, new start slots, story remapped to the middle', () => {
+test('E.1 map: 72 slots (6x6 block + ring of 36), new start slots, story remapped to the middle', () => {
   const g = createGame({ seed: 1 });
   const s = g.state;
-  assert.equal(s.slots.length, 36);
+  assert.equal(s.slots.length, 72);
   assert.deepEqual([s.slots[0].id, s.slots[0].gx, s.slots[0].gz], ['s1', 0, 0]);
   assert.deepEqual([s.slots[7].id, s.slots[7].gx, s.slots[7].gz], ['s8', 1, 1]);
   assert.deepEqual([s.slots[35].id, s.slots[35].gx, s.slots[35].gz], ['s36', 5, 5]);
@@ -1388,7 +1388,7 @@ test('E.1 map: 36 slots in a 6x6 grid, new start slots, story remapped to the mi
   }
 });
 
-test('E.1 migration: a 16-slot save gets 36 slots, modules shifted (+1,+1), ids that point at slots follow', () => {
+test('E.1 migration: a 16-slot save gets 72 slots, modules shifted (+1,+1), ids that point at slots follow', () => {
   const g = createGame({ seed: 3 });
   const old = JSON.parse(g.serialize());
   const cur = JSON.parse(g.serialize()).slots;
@@ -1402,7 +1402,7 @@ test('E.1 migration: a 16-slot save gets 36 slots, modules shifted (+1,+1), ids 
   delete old.health; delete old.resources.methane; delete old.stats.domeAt; old.version = 2;
   const h = loadGame(JSON.stringify(old));
   const s = h.state;
-  assert.equal(s.slots.length, 36);
+  assert.equal(s.slots.length, 72);
   assert.equal(slotAt(s, 's15').module.type, 'habitat');
   assert.equal(slotAt(s, 's16').module.type, 'solar');
   assert.equal(slotAt(s, 's21').module.type, 'battery');
@@ -1416,6 +1416,20 @@ test('E.1 migration: a 16-slot save gets 36 slots, modules shifted (+1,+1), ids 
   h.tick(10);
   assert.ok(h.state.t > 10);
   assert.equal(loadGame(h.serialize()).serialize(), h.serialize(), 'a migrated save round-trips');
+});
+
+test('72-slot map: a 36-slot save keeps ids and cells, gains s37..s72 empty around the old block', () => {
+  const g = createGame({ seed: 4 });
+  const old = JSON.parse(g.serialize());
+  old.slots = old.slots.slice(0, 36); old.version = 3;
+  const s = loadGame(JSON.stringify(old)).state;
+  assert.equal(s.slots.length, 72);
+  assert.equal(slotAt(s, 's15').module.type, 'habitat');
+  assert.deepEqual([slotAt(s, 's15').gx, slotAt(s, 's15').gz], [2, 2]);
+  assert.deepEqual([slotAt(s, 's37').gx, slotAt(s, 's37').gz, slotAt(s, 's37').module], [-1, -1, null]);
+  assert.deepEqual([slotAt(s, 's72').gx, slotAt(s, 's72').gz], [7, 6]);
+  assert.equal(new Set(s.slots.map((x) => x.gx + ',' + x.gz)).size, 72, 'no two slots share a cell');
+  assert.equal(s.slots.filter((x) => x.module).length, 3);
 });
 
 test('E.2 support modules: thermal, pressurizer, waterFilter, decon, warehouse; staff rules', () => {

@@ -1,6 +1,6 @@
 // Tela inicial, Dados da NASA, comunicação com a Terra e painéis novos. Mesclado em pt.js.
 export default {
-  'design.mission': 'Missão Sabiá',
+  'design.mission': 'Protocol: Ares',
   'design.intro': 'Cuide de uma base em Marte com números reais da NASA. Cada erro ensina ciência.',
   'design.explore': 'Explore',
   'design.build': 'Construa',

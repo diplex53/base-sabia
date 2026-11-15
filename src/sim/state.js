@@ -5,7 +5,7 @@ import { seedToUint32, random } from './rng.js';
 import { CHAPTERS, STORY_FEATURES } from '../data/story.js';
 import { CRAFT_START_INV, CRAFT_START_MODULES } from '../data/crafting.js';
 
-export const STATE_VERSION = 3;
+export const STATE_VERSION = 4;
 
 /** A fresh module record. `spent` = everything paid for it (for the 50% demolish refund). */
 export function newModule(type, level, status) {
@@ -115,6 +115,12 @@ export function createInitialState({ mode = 'colony', chapter = 0, seed, difficu
  */
 function migrateSlots(state) {
   if (!Array.isArray(state.slots) || state.slots.length >= SLOTS.length) return;
+  // 36-slot save (6x6 map): ids and cells stay, the 36 new empty slots are appended (s37..s72)
+  if (state.slots.length > 16) {
+    const have = new Set(state.slots.map((s) => s.id));
+    for (const s of SLOTS) if (!have.has(s.id)) state.slots.push({ id: s.id, gx: s.gx, gz: s.gz, module: null });
+    return;
+  }
   const byId = new Map(state.slots.map((s) => [s.id, s]));
   const fresh = SLOTS.map((s) => ({ id: s.id, gx: s.gx, gz: s.gz, module: null }));
   for (const [oldId, old] of byId) {

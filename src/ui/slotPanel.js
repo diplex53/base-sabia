@@ -42,6 +42,11 @@ export function createSlotPanel(root, ctx) {
   const act = (action) => { const r = ctx.act(action); sig = null; return r; };
   const modName = (type) => tOr('mod.' + type + '.name', type);
   const modDesc = (type) => tOr('mod.' + type + '.desc', '');
+  const modScience = (type) => {
+    const s = tOr('mod.' + type + '.science', '');
+    if (!s) return null;
+    return el('div', { class: 'opt-science' }, el('h5', { class: 'opt-science-h' }, tOr('ui.scienceLabel', 'Science')), el('p', { class: 'opt-science-p' }, s));
+  };
 
   function viewNone() {
     return [el('div', { class: 'inspector-empty' }, el('span', { class: 'empty-cross', 'aria-hidden': 'true' }, '+'), el('p', { class: 'muted' }, t('ui.noSlot')))];
@@ -84,6 +89,7 @@ export function createSlotPanel(root, ctx) {
       return el('li', { class: 'opt' + (isNew ? ' is-new' : '') },
         el('div', { class: 'opt-head' }, icon(MODULE_ICONS[o.type]), el('strong', {}, modName(o.type)), isNew ? el('span', { class: 'new-tag' }, t('story.new')) : null),
         el('p', { class: 'muted' }, modDesc(o.type)),
+        modScience(o.type),
         el('p', { class: 'small' }, t('ui.cost', { c: costText(o.cost) }) + '. ' + t('ui.buildTime', { n: fmt(o.buildSols, 1) })),
         o.ok ? null : el('p', { class: 'reason' }, t(o.reason || 'err.locked')),
         o.kit ? el('p', { class: 'kit-badge' }, t('ui.kitReady')) : null,
@@ -230,6 +236,7 @@ export function createSlotPanel(root, ctx) {
     s += '|' + getLang() + '|' + JSON.stringify(ctx.getGuide()) + '|' + ctx.newSig() + '|' + ['assign', 'clean', 'toggle'].map((x) => (ctx.featureOn(x) ? 1 : 0)).join('') + (state.unlocked && state.unlocked.modules ? state.unlocked.modules.length : '');
     if (s !== sig) {
       sig = s;
+      root.classList.toggle('slot-empty', !(slot && slot.module));
       if (!slot) { closePopup(); rebuild(viewNone); }
       else if (!slot.module) { rebuild(() => viewEmpty(slot)); renderPopup(slot); }
       else { closePopup(); rebuild(() => viewModule(slot, state)); }

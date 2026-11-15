@@ -45,7 +45,7 @@ export const PALETTE = {
   pad: 0x65747d,
   padEdge: 0x344652,
   padLine: 0xc6d8d8,
-  plus: 0x9eafb5,
+  plus: 0xf2dfb6,   // light sand "+" on empty slots, readable on the soil
   rock: 0x4b3a35,
   rock2: 0x5e4740,
   ice: 0xcdeaf3,

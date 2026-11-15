@@ -1,7 +1,7 @@
 // Story mode: interface texts, chapters, scenes and steps. Merged into en.js.
 export default {
   'story.menuTitle': 'Story Mode',
-  'story.menuIntro': 'Mission Sabiá: four people, one base and the planet Mars. Pick a chapter.',
+  'story.menuIntro': 'Protocol: Ares: four people, one base and the planet Mars. Pick a chapter.',
   'story.chapterN': 'Chapter {n}',
   'story.locked': 'Finish the previous chapter to open this one.',
   'story.done': 'Completed',

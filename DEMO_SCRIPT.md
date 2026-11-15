@@ -1,4 +1,4 @@
-# Demo de 30 segundos — Base Sabiá
+# Demo de 30 segundos — Protocol: Ares
 
 Roteiro para gravação e edição pela equipe. Ainda não é um vídeo gravado. Formato baseado nas instruções fornecidas pelo líder da equipe; conferir as regras finais no portal antes do envio.
 
@@ -7,13 +7,15 @@ Gravar somente a janela do jogo, sem webcam, narração, notificações, nomes d
 | Tempo | Imagem a gravar | Legenda em inglês |
 |---|---|---|
 | 0–4 s | Base 3D com recursos visíveis; câmera parada | **Can you keep a Mars base alive?** |
-| 4–9 s | Selecionar espaço vazio, construir um painel ou módulo de suporte à vida | **Build. Balance energy, air, water and food.** |
+| 4–9 s | Clicar num espaço vazio (o "+" no chão), escolher um painel ou módulo de suporte à vida no pop-up de construção | **Build. Balance energy, air, water and food.** |
 | 9–14 s | Tempestade de poeira já preparada; mostrar energia caindo e pausar | **Real missions inspire every challenge.** |
 | 14–19 s | Aviso solar com registro DONKI; clicar em Abrigar todos | **Protect the crew. Every decision has a cost.** |
 | 19–25 s | Abrir painel científico com fonte legível ou tela Dados da NASA | **Learn why it happened. Explore the evidence.** |
-| 25–30 s | Base e título Base Sabiá; fechar com convite | **Play in Portuguese or English. Learn by trying again.** |
+| 25–30 s | Base e título Protocol: Ares; fechar com convite | **Play in Portuguese or English. Learn by trying again.** |
 
 ## Preparação
+
+Atalho: o modo apresentação (`?demo=1` ou o botão "Iniciar apresentação" na tela inicial) joga sozinho por cerca de 3 minutos, com legendas próprias. Serve para gravar as cenas de base crescendo e tempestade sem jogar à mão. Gravar com a janela maximizada: em janela estreita o selo "APRESENTAÇÃO" cobre um botão da barra de baixo. Cena opcional, se sobrar tempo no corte: tecla P (fabricação) com uma barra de ferro sendo fabricada. Teclas: V inventário, P fabricação, B volta a câmera à base, Esc pausa.
 
 1. Usar uma partida de demonstração separada; pausar antes de cada cena. Não editar os estoques para apresentar como partida normal. É permitido montar a sequência com cortes, identificando-a como demonstração.
 2. Gravar cada trecho mais longo e cortar para a duração indicada. Não esperar que uma tempestade aleatória aconteça durante uma única tomada de 30 s; aproveitar os eventos roteirizados da história.

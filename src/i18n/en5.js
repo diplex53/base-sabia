@@ -1,6 +1,6 @@
 // Start screen, NASA data, Earth communication and new panels. Merged into en.js.
 export default {
-  'design.mission': 'Mission Sabiá',
+  'design.mission': 'Protocol: Ares',
   'design.intro': 'Run a base on Mars with real NASA numbers. Every mistake teaches science.',
   'design.explore': 'Explore',
   'design.build': 'Build',

@@ -13,3 +13,4 @@ build/
 .wrangler/
 .claude/settings.local.json
 Captura de tela*.png
+.claude/worktrees/
