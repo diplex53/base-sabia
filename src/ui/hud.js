@@ -89,6 +89,8 @@ export function createHud(ctx) {
   const notebookBtn = el('button', { type: 'button', class: 'btn', onclick: () => ctx.openNotebook() });
   const helpBtn = el('button', { type: 'button', class: 'btn btn-advisor', onclick: () => ctx.openHelp() });
   const techBtn = el('button', { type: 'button', class: 'btn', onclick: () => ctx.openTech() });
+  const invBtn = el('button', { type: 'button', class: 'btn', onclick: () => ctx.openInventory() });
+  const craftBtn = el('button', { type: 'button', class: 'btn', onclick: () => ctx.openCraft() });
   const glossBtn = el('button', { type: 'button', class: 'btn btn-round', onclick: () => ctx.openGlossary() }, '?');
   const infoBtn = el('button', { type: 'button', class: 'btn btn-round info-btn', onclick: () => ctx.openInfo() }, 'i');
   row1.append(infoBtn);
@@ -127,7 +129,7 @@ export function createHud(ctx) {
     setMenu(false);
     collapsible.forEach((n) => menu.append(n));
     const target = mq.matches ? menu : controls;
-    [helpBtn, techBtn, cityBtn].forEach((n) => target.append(n));
+    [helpBtn, techBtn, invBtn, craftBtn, cityBtn].forEach((n) => target.append(n));
   }
   if (mq.addEventListener) mq.addEventListener('change', placeControls); else if (mq.addListener) mq.addListener(placeControls);
   placeControls();
@@ -280,6 +282,7 @@ export function createHud(ctx) {
     setText(notebookBtn, t('ui.notebook') + ' ' + t('ui.notebookCount', { n: seen, total: TOTAL_PANELS }));
     setText(helpBtn, t('ui.help'));
     setText(techBtn, t('ui.tech'));
+    setText(invBtn, t('ui.inventory')); setText(craftBtn, t('ui.craft'));
     setText(dataBtn, t('data.title'));
     const cp = colonyProgress(state);
     const showProg = !state.story;

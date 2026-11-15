@@ -6,6 +6,7 @@ import { newModule } from './state.js';
 import { isBuilt, levelSpec, peopleCapacity, headcount, batteryCapacity, effectiveCost, hasTech, healthLow } from './model.js';
 import { clearStaff } from './colonists.js';
 import { showPanel } from './alerts.js';
+import { hasKit, invAdd } from './crafting.js';
 
 export const findSlot = (state, slotId) => state.slots.find((s) => s.id === slotId);
 
@@ -37,6 +38,7 @@ export function checkBuild(state, slotId, type) {
   if (def.requiresTech && !hasTech(state, def.requiresTech)) return 'err.locked';
   if (def.requiresBuilt && !state.slots.some((s) => s.module && s.module.type === def.requiresBuilt && isBuilt(s.module))) return 'err.locked';
   if (def.unique && state.slots.some((s) => s.module && s.module.type === type)) return 'err.unique';
+  if (hasKit(state, type)) return null; // crafting: a kit replaces the cost
   return checkCost(state, levelCost(state, type, 1));
 }
 
@@ -58,7 +60,8 @@ export function actBuild(state, { slotId, moduleType }) {
   if (err) return err;
   const sl = findSlot(state, slotId);
   const mod = newModule(moduleType, 1, 'building');
-  pay(state, mod, levelCost(state, moduleType, 1));
+  if (hasKit(state, moduleType)) { invAdd(state, 'kit.' + moduleType, -1); mod.progress = 0.5; } // kit: no cost, half the time
+  else pay(state, mod, levelCost(state, moduleType, 1));
   sl.module = mod;
   return null;
 }

@@ -8,6 +8,7 @@ import { TECHS } from '../src/data/tech.js';
 import { DONKI_EVENTS } from '../src/data/donkiEvents.js';
 import { idleBot, competentBot, carelessBot, runBot, chapter1Bot, chapter2Bot, chapter3Bot, runChapter } from './bots.mjs';
 import { CHAPTERS } from '../src/data/story.js';
+import { DRILL_CYCLE_SOLS } from '../src/data/crafting.js';
 
 const REPORT = process.argv.includes('--report');
 const T0 = Date.now();
@@ -1641,6 +1642,76 @@ test('bot: competent bot finishes the dome on cadet within 400 sols in >= 5 of 1
   }
   if (REPORT) console.log(`  dome on cadet: ${ok}/10, sols ${at.join(', ')}`);
   assert.ok(ok >= 5, `dome in ${ok} of 10 seeds`);
+});
+
+// ---------- crafting (team list) ----------
+const powerUp = (g) => { place(g, 's1', 'solar', 3); place(g, 's2', 'solar', 3); place(g, 's3', 'battery', 3); place(g, 's4', 'habitat', 1); g.state.resources.energy = 200; g.state.env.sun = 1; };
+
+test('crafting: a basic drill makes the listed ores after one cycle', () => {
+  const g = bareGame(3);
+  powerUp(g);
+  place(g, 's8', 'drillBasic');
+  const reg0 = g.state.resources.regolith;
+  g.tick(DRILL_CYCLE_SOLS + TIME.STEP);
+  for (const k of ['iron', 'copper', 'silicon', 'aluminum', 'sulfur', 'carbon']) assert.equal(g.state.inv[k], 3, k);
+  assert.equal(g.state.resources.regolith - reg0, 5);
+  assert.equal(g.state.inv.titanium, undefined);
+});
+
+test('crafting: craft needs a production table and moves quantities', () => {
+  const g = bareGame(4);
+  powerUp(g);
+  g.state.inv.iron = 7;
+  assert.equal(g.dispatch({ type: 'craft', recipeId: 'ironBar' }).reason, 'err.noCraftTable');
+  place(g, 's8', 'craftTable');
+  assert.equal(g.dispatch({ type: 'craft', recipeId: 'ironBar', times: 2 }).ok, true);
+  assert.equal(g.state.inv.iron, 1);
+  assert.equal(g.state.inv.ironBar, 2);
+  assert.equal(g.dispatch({ type: 'craft', recipeId: 'gear' }).reason, 'err.missingIngredients');
+  const opts = selectors.craftOptions(g.state);
+  assert.equal(opts.find((o) => o.id === 'ironBar').stationOk, true);
+  assert.deepEqual(selectors.inventory(g.state), { iron: 1, ironBar: 2 });
+});
+
+test('crafting: builder recipes need a module builder', () => {
+  const g = bareGame(5);
+  powerUp(g);
+  place(g, 's8', 'craftTable');
+  Object.assign(g.state.inv, { siliconPlate: 6, wire: 4, ironBar: 4, temperedGlass: 2 });
+  assert.equal(g.dispatch({ type: 'craft', recipeId: 'kit.solar' }).reason, 'err.noModuleBuilder');
+  place(g, 's9', 'moduleBuilder');
+  assert.equal(g.dispatch({ type: 'craft', recipeId: 'kit.solar' }).ok, true);
+  assert.equal(g.state.inv['kit.solar'], 1);
+  assert.equal(g.state.inv.wire, undefined);
+});
+
+test('crafting: building with a kit uses the kit, not parts, and takes half the time', () => {
+  const g = bareGame(6);
+  powerUp(g);
+  g.state.inv['kit.moxie'] = 1;
+  g.state.resources.parts = 0;
+  const o = selectors.buildOptions(g.state, 's10').find((x) => x.type === 'moxie');
+  assert.equal(o.kit, true);
+  assert.equal(o.ok, true);
+  assert.equal(g.dispatch({ type: 'build', slotId: 's10', moduleType: 'moxie' }).ok, true);
+  assert.equal(g.state.inv['kit.moxie'], undefined);
+  assert.equal(g.state.resources.parts, 0);
+  const m = g.state.slots.find((s) => s.id === 's10').module;
+  assert.equal(m.progress, 0.5);
+  assert.equal(selectors.buildOptions(g.state, 's11').find((x) => x.type === 'moxie').kit, false);
+});
+
+test('crafting: a save without inv loads and the new modules are buildable in colony mode', () => {
+  const g = createGame({ seed: 7 });
+  const raw = JSON.parse(g.serialize());
+  delete raw.inv;
+  raw.unlocked.modules = raw.unlocked.modules.filter((x) => !['drillBasic', 'craftTable', 'moduleBuilder'].includes(x));
+  const g2 = loadGame(JSON.stringify(raw));
+  assert.deepEqual(g2.state.inv, {});
+  for (const t of ['drillBasic', 'craftTable', 'moduleBuilder']) assert.ok(g2.state.unlocked.modules.includes(t), t);
+  g2.tick(1);
+  const st = createGame({ mode: 'story', chapter: 1, seed: 1 }).state;
+  for (const t of ['drillBasic', 'drillAdvanced', 'craftTable', 'moduleBuilder']) assert.ok(!st.unlocked.modules.includes(t), t);
 });
 
 // ---------- report ----------

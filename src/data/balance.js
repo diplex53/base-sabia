@@ -178,10 +178,19 @@ export const MODULES = {
     unique: true, staffable: false, requiresTech: 'hydrogenShield', requiresBuilt: 'dome',
     levels: [{ gcrMult: 0.7, cost: { parts: 120, regolith: 150 }, buildSols: 8 }],
   },
+  // ---------- Crafting (team list). Outputs and recipes in crafting.js. ----------
+  // ASSUMPTION: energy scaled from the team's kW table (basic drill -2 kW, advanced -5, table -2, builder -3)
+  // onto this bus: 2 kW ~ the cheapest consumer here (waterFilter, 4 kWh/sol). Costs are game balance.
+  drillBasic: { staffable: false, levels: [{ use: 4, cost: { parts: 6 }, buildSols: 1 }] },
+  drillAdvanced: { staffable: false, requiresTech: 'robotics', levels: [{ use: 10, cost: { parts: 20, regolith: 10 }, buildSols: 2 }] },
+  craftTable: { staffable: false, levels: [{ use: 4, cost: { parts: 5 }, buildSols: 1 }] },
+  moduleBuilder: { staffable: false, levels: [{ use: 6, cost: { parts: 12, regolith: 8 }, buildSols: 2 }] },
 };
 
 /** Module types added by Apêndice E (never unlocked in story mode). */
-export const EXPANSION_MODULES = ['gym', 'hospital', 'thermal', 'pressurizer', 'waterFilter', 'decon', 'warehouse', 'factory', 'sabatier', 'mine', 'dome', 'radShield'];
+export const EXPANSION_MODULES = ['gym', 'hospital', 'thermal', 'pressurizer', 'waterFilter', 'decon', 'warehouse', 'factory', 'sabatier', 'mine', 'dome', 'radShield', 'drillBasic', 'drillAdvanced', 'craftTable', 'moduleBuilder'];
+// Crafting economy switch (part 2). One-line fallback: 'parts'.
+export const DEFAULT_ECONOMY = 'craft';
 
 // Storage (E.2). Base capacity in kg; each warehouse level adds 100% of the base. Above the cap the surplus is lost.
 // methane: ASSUMPTION tank size (not raised by the warehouse).
@@ -316,7 +325,7 @@ export const START = {
     colonists: 4,
     // E.4: the expansion modules without a tech are available from the start; the others unlock with research
     unlocked: ['habitat', 'solar', 'battery', 'moxie', 'extractor', 'greenhouse', 'shelter',
-      'gym', 'hospital', 'thermal', 'pressurizer', 'waterFilter', 'decon', 'warehouse'],
+      'gym', 'hospital', 'thermal', 'pressurizer', 'waterFilter', 'decon', 'warehouse', 'drillBasic', 'craftTable', 'moduleBuilder'],
   },
 };
 

@@ -862,7 +862,52 @@ function domeBase() {
   return { boxes: o, meta: {} };
 }
 
-const BUILDERS = { habitat, solar, battery, moxie, extractor, greenhouse, shelter, reactor, gym, hospital, thermal, pressurizer, waterFilter, decon, warehouse, factory, sabatier, mine, dome: domeBase, radShield };
+// drills: small lattice tower over a base plate, darker bit going into the ground (advanced: taller, wider)
+function drillRig(adv) {
+  const o = [];
+  const h = adv ? 6.4 : 4.6, w = adv ? 3.2 : 2.4, x0 = 4 - w / 2;
+  o.push([1.0, 0, 1.0, 6.0, 0.25, 6.0, 'regolith2']);
+  o.push([x0 - 0.4, 0.25, x0 - 0.4, w + 0.8, 0.35, w + 0.8, adv ? 'hullDark' : 'steel']);
+  for (const [x, z] of [[x0, x0], [x0 + w - 0.3, x0], [x0, x0 + w - 0.3], [x0 + w - 0.3, x0 + w - 0.3]]) o.push([x, 0.6, z, 0.3, h, 0.3, 'yellow']);
+  for (let y = 1.6; y < h; y += 1.4) { o.push([x0, y, x0, w, 0.18, 0.18, 'black']); o.push([x0, y, x0 + w - 0.18, w, 0.18, 0.18, 'black']); }
+  o.push([x0 - 0.1, h + 0.6, x0 - 0.1, w + 0.2, 0.5, w + 0.2, 'hullDark']);
+  o.push([3.7, 0.0, 3.7, 0.6, h + 0.6, 0.6, 'metal']);
+  o.push([3.6, 0.0, 3.6, 0.8, 0.9, 0.8, 'dark']);   // bit
+  o.push([3.8, h + 1.1, 3.8, 0.4, 0.4, 0.4, 'led']);
+  o.push([1.3, 0.25, 5.6, 1.2, 0.7, 1.1, 'regolith']);
+  if (adv) { o.push([5.6, 0.25, 1.3, 1.1, 0.8, 1.1, 'crystal']); o.push([5.7, 0.25, 5.7, 1.0, 1.2, 1.0, 'steel']); }
+  return { boxes: o, meta: {} };
+}
+// production table: low workbench with a tool rack
+function craftTable() {
+  const o = [];
+  o.push([0.8, 0, 0.8, 6.4, 0.25, 6.4, 'steel']);
+  for (const [x, z] of [[1.6, 2.2], [6.0, 2.2], [1.6, 5.4], [6.0, 5.4]]) o.push([x, 0.25, z, 0.4, 1.3, 0.4, 'metal']);
+  o.push([1.4, 1.55, 2.0, 5.2, 0.3, 4.0, 'hull']);
+  o.push([1.4, 1.85, 5.6, 5.2, 1.2, 0.3, 'hullDark']);   // back rack
+  for (const x of [2.0, 3.2, 4.4, 5.6]) o.push([x, 2.3, 5.4, 0.25, 0.5, 0.2, 'accent']);
+  o.push([2.0, 1.85, 2.6, 1.0, 0.4, 1.0, 'dark']);
+  o.push([4.6, 1.85, 2.6, 1.4, 0.3, 0.9, 'regolith']);
+  o.push([6.2, 3.05, 5.6, 0.3, 0.3, 0.3, 'led']);
+  return { boxes: o, meta: {} };
+}
+// module builder: boxy printer with a gantry and a print bed
+function moduleBuilder() {
+  const o = [];
+  o.push([0.4, 0, 0.4, 7.2, 0.3, 7.2, 'steel']);
+  o.push([1.2, 0.3, 1.2, 5.6, 0.3, 5.6, 'dark']);       // print bed
+  for (const [x, z] of [[0.6, 0.6], [6.9, 0.6], [0.6, 6.9], [6.9, 6.9]]) o.push([x, 0.3, z, 0.5, 4.2, 0.5, 'hullDark']);
+  o.push([0.6, 4.5, 0.6, 6.8, 0.4, 0.5, 'frame']);
+  o.push([0.6, 4.5, 6.9, 6.8, 0.4, 0.5, 'frame']);
+  o.push([3.6, 4.4, 0.6, 0.8, 0.5, 6.8, 'accent']);      // gantry
+  o.push([3.7, 3.4, 3.7, 0.6, 1.0, 0.6, 'metal']);       // print head
+  o.push([2.0, 0.6, 2.0, 4.0, 1.2, 4.0, 'regolith']);     // part being printed
+  o.push([3.85, 3.2, 3.85, 0.3, 0.2, 0.3, 'led']);
+  return { boxes: o, meta: {} };
+}
+
+const BUILDERS = { habitat, solar, battery, moxie, extractor, greenhouse, shelter, reactor, gym, hospital, thermal, pressurizer, waterFilter, decon, warehouse, factory, sabatier, mine, dome: domeBase, radShield,
+  drillBasic: () => drillRig(false), drillAdvanced: () => drillRig(true), craftTable, moduleBuilder };
 
 export const MODULE_TYPES = Object.keys(BUILDERS);
 

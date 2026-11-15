@@ -78,6 +78,8 @@ const ctx = {
   },
   continueGame,
   openTech: () => modals.showTech(),
+  openCraft: () => modals.showCraft(),
+  openInventory: () => modals.showInventory(),
   openShip: () => { if (!modals.showShipInfo(game.state)) toast(t('ui.shipIn', { n: Math.max(0, Math.ceil(game.state.ship.nextArrivalT - game.state.t)) })); },
   openShipDecision: () => modals.openShipDecisionNow(),
   getSelected: () => selected,
@@ -471,8 +473,12 @@ window.addEventListener('keydown', (e) => {
     setSpeed(speed > 0 ? 0 : (window.__lastSpeed || 1));
   } else if (e.key === 'Escape') {
     if (started && !game.state.over) modals.showPause();
-  } else if (e.key === 'v' || e.key === 'V') {
+  } else if (e.key === 'b' || e.key === 'B' || e.key === 'Home') {
     if (started && view && view.resetCamera) view.resetCamera();
+  } else if (e.key === 'v' || e.key === 'V') {
+    if (started && !game.state.over) modals.showInventory();
+  } else if (e.key === 'p' || e.key === 'P') {
+    if (started && !game.state.over) modals.showCraft();
   } else if (e.key === '1' || e.key === '2' || e.key === '3') {
     setSpeed([1, 2, 4][Number(e.key) - 1]);
   }

@@ -14,11 +14,12 @@ const LINES = {
 };
 const MODULE_ICONS = { habitat: 'pop', solar: 'energy', battery: 'energy', moxie: 'o2', extractor: 'water', greenhouse: 'food', shelter: 'shelter', reactor: 'tech',
   gym: 'pop', hospital: 'pop', thermal: 'energy', pressurizer: 'o2', waterFilter: 'water', decon: 'shelter', warehouse: 'regolith',
-  factory: 'parts', sabatier: 'energy', mine: 'regolith', dome: 'shelter', radShield: 'shelter' };
+  factory: 'parts', sabatier: 'energy', mine: 'regolith', dome: 'shelter', radShield: 'shelter',
+  drillBasic: 'regolith', drillAdvanced: 'regolith', craftTable: 'parts', moduleBuilder: 'parts' };
 const SECTIONS = [
   ['energy', ['solar', 'battery', 'reactor', 'sabatier', 'thermal']],
   ['life', ['habitat', 'moxie', 'extractor', 'greenhouse', 'waterFilter', 'pressurizer']],
-  ['production', ['factory', 'mine', 'warehouse']],
+  ['production', ['factory', 'mine', 'warehouse', 'drillBasic', 'drillAdvanced', 'craftTable', 'moduleBuilder']],
   ['protection', ['shelter', 'decon', 'dome', 'radShield']],
   ['wellbeing', ['gym', 'hospital']],
 ];
@@ -91,6 +92,7 @@ export function createSlotPanel(root, ctx) {
         modScience(o.type),
         el('p', { class: 'small' }, t('ui.cost', { c: costText(o.cost) }) + '. ' + t('ui.buildTime', { n: fmt(o.buildSols, 1) })),
         o.ok ? null : el('p', { class: 'reason' }, t(o.reason || 'err.locked')),
+        o.kit ? el('p', { class: 'kit-badge' }, t('ui.kitReady')) : null,
         el('button', {
           type: 'button', class: 'btn btn-primary' + (g.build === o.type ? ' guide-target' : ''), 'data-fid': 'build-' + o.type, disabled: !o.ok,
           onclick: () => { const r = act({ type: 'build', slotId: slot.id, moduleType: o.type }); if (!r || r.ok !== false) closePopup(); },
@@ -224,7 +226,7 @@ export function createSlotPanel(root, ctx) {
     if (!slot) s = 'none';
     else if (!slot.module) {
       cache.opts = buildOptions(state, id);
-      s = 'empty|' + id + '|' + cache.opts.map((o) => o.type + (o.ok ? 1 : 0) + (o.reason || '')).join(',');
+      s = 'empty|' + id + '|' + cache.opts.map((o) => o.type + (o.ok ? 1 : 0) + (o.reason || '') + (o.kit ? 'k' : '')).join(',');
     } else {
       const m = slot.module;
       cache.up = upgradeInfo(state, id);

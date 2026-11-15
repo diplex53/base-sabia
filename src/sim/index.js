@@ -28,6 +28,7 @@ import {
 import { score, getSol } from './selectors.js';
 import { checkStoryAction, recordStoryEvent, recordStoryRecall, stepStory } from './story.js';
 import { configureRealSun } from './realSun.js';
+import { stepDrills, actCraft } from './crafting.js';
 
 export * as selectors from './selectors.js';
 
@@ -44,6 +45,7 @@ const ACTIONS = {
   startExpedition: actStartExpedition,
   recallExpedition: actRecallExpedition,
   shipDecision: actShipDecision,
+  craft: actCraft,
 };
 
 /** Science (DESIGN 5.6): SCIENCE_PER_COLONIST_SOL per active colonist per sol (events and expeditions add theirs). */
@@ -99,6 +101,7 @@ function step(state, emit) {
   stepRepairs(state, dt, emit);     // B.2
   stepEnergy(state, dt, emit);
   stepLife(state, dt, emit);
+  stepDrills(state, dt, emit);      // crafting: drill output
   stepHealth(state, dt, emit);      // E.3
   stepMilestone(state, dt);         // B.8
   stepDust(state, dt, emit);
