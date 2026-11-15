@@ -41,6 +41,7 @@ Cada linha: o que pedimos, por que pedimos, o que a IA fez.
 | Dom, 11h10 | Trocar o nome para "Protocol: Ares" | Decisão da equipe | Subagente trocou o título; a base dentro da história segue como Base Sabiá |
 | Dom, 11h10 | Chão de construção da cor do solo com um "+", área de construção 2 vezes maior, mundo cerca de 50 vezes maior | O concreto cinza destoava e o mapa parecia pequeno | Subagente em cópia separada do código; o mundo maior é só visual (terreno distante simples e névoa) para não derrubar a fluidez |
 | Dom, 11h10 | Brocas, minérios e sistema de crafting com as receitas da equipe | Ideia central dos colegas que não programam | Subagente em cópia separada. Decisão da IA, por causa do prazo: o crafting entra como caminho adicional (kit fabricado constrói sem custo e mais rápido) em vez de substituir o sistema de peças, para não quebrar o modo história nem os testes |
+| Dom, 11h25 | Inventário na tecla V, receitas na tecla P, e substituir o sistema de peças pelos itens e minérios da lista | A equipe quer que o jogo final use o sistema de recursos que ela desenhou | Repassado ao subagente do crafting. A IA apontou que as receitas eram circulares (a broca avançada precisa de minérios que só ela extrai) e propôs a correção: começar com mesa de produção e broca básica, e as naves trazem minérios avançados. A troca fica atrás de uma chave para poder voltar ao sistema antigo se não der tempo de testar |
 
 ## O que a IA não decidiu
 
