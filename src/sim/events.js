@@ -16,10 +16,13 @@ import { TAU_CLEAR, SOL_HOURS, SPE_MODERATE_MSV, SPE_SEVERE_MSV } from '../data/
 import { EVENTS } from '../data/balance.js';
 import { DONKI_EVENTS } from '../data/donkiEvents.js';
 import { random } from './rng.js';
-import { solIndex, difficultyOf, hasTech, isBuilt } from './model.js';
+import { solIndex, difficultyOf, hasTech, isBuilt, isConsumerType, deconFailureCut } from './model.js';
 import { showPanel } from './alerts.js';
 
 const FAILURE_EXCLUDED = ['habitat', 'battery', 'shelter'];
+const OLD_TYPES = ['solar', 'moxie', 'extractor', 'greenhouse', 'reactor'];
+/** Can fail (B.2 + E.2): the old producers, and the expansion modules that draw power. */
+const canFail = (type) => !FAILURE_EXCLUDED.includes(type) && (OLD_TYPES.includes(type) || isConsumerType(type));
 
 /** Event difficulty D (DESIGN 10) for a displayed sol number. */
 export const eventD = (sol) => Math.min(EVENTS.difficultyMax, 1 + sol / EVENTS.difficultyRampSols);
@@ -114,7 +117,7 @@ function dustDevil(state, emit, params = {}) {
 }
 
 function failure(state, emit, params = {}) {
-  const ok = state.slots.filter((sl) => sl.module && sl.module.status === 'ok' && !FAILURE_EXCLUDED.includes(sl.module.type));
+  const ok = state.slots.filter((sl) => sl.module && sl.module.status === 'ok' && canFail(sl.module.type));
   const sl = (params.slotId && ok.find((p) => p.id === params.slotId)) || (ok.length ? ok[Math.floor(random(state) * ok.length)] : null);
   if (!sl) return;
   sl.module.status = 'broken';
@@ -190,6 +193,6 @@ export function drawEvents(state, emit) {
   const liveWindow = state.realSun && t >= E.graceSols && t < E.graceSols + 30;
   if (!liveWindow && !state.env.spe && gapOk(last.spe, t, E.spe.minGap) && r[2] < E.spe.p * D * k) fireEvent(state, emit, 'spe');
   if (r[3] < E.dustDevil.p * k) fireEvent(state, emit, 'dustDevil');
-  if (dif.failures && r[4] < E.failure.p * D * k) fireEvent(state, emit, 'failure');
+  if (dif.failures && r[4] < E.failure.p * D * k * (1 - deconFailureCut(state))) fireEvent(state, emit, 'failure'); // E.2 decon
   if (r[5] < E.marsquake.p * k) fireEvent(state, emit, 'marsquake');
 }

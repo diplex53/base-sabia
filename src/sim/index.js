@@ -12,6 +12,7 @@ import { stepConstruction, actBuild, actUpgrade, actDemolish, actToggle, actClea
 import { stepRepairs, actRepair } from './repair.js';
 import { stepEnergy } from './energy.js';
 import { stepLife } from './life.js';
+import { stepHealth } from './health.js';
 import { stepDust } from './dust.js';
 import { stepRadiation } from './radiation.js';
 import { stepExpeditions, actStartExpedition, actRecallExpedition } from './expeditions.js';
@@ -22,7 +23,7 @@ import { stepAlerts, showPanel } from './alerts.js';
 import { actAssign } from './colonists.js';
 import {
   solIndex, habitatPowered, activeCount, rawModuleRates, headcount, crewUse, genRate, isActive, isConsumerType,
-  nominalUse, difficultyOf,
+  nominalUse, difficultyOf, storageCap,
 } from './model.js';
 import { score, getSol } from './selectors.js';
 import { checkStoryAction, recordStoryEvent, recordStoryRecall, stepStory } from './story.js';
@@ -67,15 +68,30 @@ function stepTimers(state, dt, emit) {
   else if (tm.blackout >= GRACE.blackout * g - 1e-9) reason = 'blackout';
   else if (tm.waterOut >= GRACE.water * g - 1e-9) reason = 'water';
   else if (tm.foodOut >= GRACE.food * g - 1e-9) reason = 'food';
+  else if (state.health !== undefined && state.health <= 0) reason = 'health'; // E.3: mission aborted
   if (!reason) return;
   showPanel(state, emit, `over.${reason}`);
   state.over = { reason, score: score(state) };
   emit({ type: 'game.over', reason, score: state.over.score });
 }
 
+const CAPPED = ['o2', 'water', 'food'];
+/**
+ * Storage caps (Apêndice E.2): whatever came in this step above the cap is lost. A stock that was already above
+ * the cap (an old save, a warehouse switched off) is not cut, it just cannot grow until it is back under.
+ */
+function applyStorage(state, before) {
+  const r = state.resources;
+  for (const k of CAPPED) {
+    const cap = storageCap(state, k);
+    if (r[k] > cap) r[k] = Math.max(cap, Math.min(r[k], before[k]));
+  }
+}
+
 /** One fixed step of TIME.STEP sols. Order matters. */
 function step(state, emit) {
   const dt = TIME.STEP;
+  const before = { o2: state.resources.o2, water: state.resources.water, food: state.resources.food };
   stepEnvironment(state, dt, emit); // sun, comm delay, conjunction
   stepEvents(state, dt, emit);      // schedule, storm tau ramp, SPE phases (B.2)
   stepShelter(state);               // who is in the shelter (B.3)
@@ -83,20 +99,22 @@ function step(state, emit) {
   stepRepairs(state, dt, emit);     // B.2
   stepEnergy(state, dt, emit);
   stepLife(state, dt, emit);
+  stepHealth(state, dt, emit);      // E.3
   stepMilestone(state, dt);         // B.8
   stepDust(state, dt, emit);
   stepRadiation(state, dt, emit);   // GCR + SPE (5.5)
   stepExpeditions(state, dt, emit); // B.7
   stepScience(state, dt);
 
-  const before = solIndex(state.t);
+  const solBefore = solIndex(state.t);
   state.t += dt;
-  if (solIndex(state.t) > before) {
+  if (solIndex(state.t) > solBefore) {
     emit({ type: 'sol.start', sol: getSol(state) });
     closeMilestoneSol(state, emit);
     drawEvents(state, emit);        // the draw at the start of each sol (DESIGN 10)
   }
   stepShips(state, emit);
+  applyStorage(state, before);
 
   stepTimers(state, dt, emit);
   stepStory(state, emit);
@@ -112,7 +130,7 @@ function refreshRates(state) {
     const m = sl.module;
     if (!m) continue;
     gen += genRate(state, m, Math.PI * state.env.sun);
-    if (isConsumerType(m.type) && isActive(state, m)) use += nominalUse(m);
+    if (isConsumerType(m.type) && isActive(state, m)) use += nominalUse(m, state);
     const r = rawModuleRates(state, m);
     o2 += r.o2; food += r.food;
     if (r.water >= 0) water += r.water; else gh -= r.water;

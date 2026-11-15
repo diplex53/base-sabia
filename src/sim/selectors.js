@@ -3,7 +3,7 @@ import { SOL_HOURS } from '../data/constants.js';
 import { MODULES, SCORE } from '../data/balance.js';
 import {
   solIndex, rawModuleRates, genRate, isOperating, isConsumerType, nominalUse, batteryCapacity,
-  peopleCapacity, crewUse, headcount as headcountOf, activeCount,
+  peopleCapacity, crewUse, headcount as headcountOf, activeCount, storageCap, isBuilt,
 } from './model.js';
 import { checkBuild, checkUpgrade, findSlot, levelCost } from './build.js';
 
@@ -35,8 +35,42 @@ export const population = (state) => activeCount(state);
 /** Everyone present on the base (active + retired). */
 export const headcount = (state) => headcountOf(state);
 
+/** Capacities (A.4 + E.5): battery kWh, crew and shelter places, O2 / water / food storage (kg). */
 export function capacity(state) {
-  return { energy: batteryCapacity(state), crew: peopleCapacity(state, 'habitat'), shelter: peopleCapacity(state, 'shelter') };
+  return {
+    energy: batteryCapacity(state), crew: peopleCapacity(state, 'habitat'), shelter: peopleCapacity(state, 'shelter'),
+    o2: storageCap(state, 'o2'), water: storageCap(state, 'water'), food: storageCap(state, 'food'),
+  };
+}
+
+/** City overview (Apêndice E.5). domeProgress: null with no dome, 0..1 while building, 1 when done. */
+export function cityStats(state) {
+  const r = state.resources;
+  const net = netPerSol(state);
+  let modules = 0, dome = null;
+  for (const sl of state.slots) {
+    if (!sl.module) continue;
+    modules++;
+    if (sl.module.type === 'dome') dome = sl.module;
+  }
+  const store = (k) => ({ amount: r[k], cap: storageCap(state, k) });
+  return {
+    population: activeCount(state), crewCapacity: peopleCapacity(state, 'habitat'), health: state.health ?? 100,
+    powerGen: net.energy + energyUseAvg(state), powerUse: energyUseAvg(state),
+    storage: { o2: store('o2'), water: store('water'), food: store('food') },
+    modules, techs: state.tech.unlocked.length,
+    domeProgress: dome ? (isBuilt(dome) ? 1 : dome.progress) : null,
+  };
+}
+
+/** Sol-average load of the operating consumers (the "use" side of netPerSol). */
+function energyUseAvg(state) {
+  let use = 0;
+  for (const sl of state.slots) {
+    const m = sl.module;
+    if (m && m.type !== 'sabatier' && isConsumerType(m.type) && isOperating(state, m)) use += nominalUse(m, state);
+  }
+  return use;
 }
 
 /** Per-sol rates of one module right now: { gen, use, o2, water, food, active }. */
@@ -55,8 +89,11 @@ export function netPerSol(state) {
   for (const sl of state.slots) {
     const m = sl.module;
     if (!m) continue;
-    gen += genRate(state, m, 1);
-    if (isConsumerType(m.type) && isOperating(state, m)) use += nominalUse(m);
+    // a sabatier only moves energy between day and night (E.2): left out of the sol average
+    if (m.type !== 'sabatier') {
+      gen += genRate(state, m, 1);
+      if (isConsumerType(m.type) && isOperating(state, m)) use += nominalUse(m, state);
+    }
     const r = rawModuleRates(state, m);
     o2 += r.o2; water += r.water; food += r.food;
   }
@@ -94,11 +131,12 @@ export function upgradeInfo(state, slotId) {
   return { nextLevel: m.level + 1, cost: levelCost(state, m.type, m.level + 1), buildSols: next.buildSols, ok: !reason, reason };
 }
 
-/** score = 10 sols + 100 popPeak + 150 techs + 20 panels seen (DESIGN 5.6) + 1000 once self-sufficient (B.8). */
+/** score = 10 sols + 100 popPeak + 150 techs + 20 panels seen (DESIGN 5.6) + 1000 once self-sufficient (B.8) + 2000 with the dome (E.2). */
 export function score(state) {
   return SCORE.perSol * solIndex(state.t)
     + SCORE.perPopPeak * state.stats.popPeak
     + SCORE.perTech * state.tech.unlocked.length
     + SCORE.perPanel * state.stats.panelsSeen.length
-    + (state.stats.selfSufficientAt !== null && state.stats.selfSufficientAt !== undefined ? SCORE.selfSufficient : 0);
+    + (state.stats.selfSufficientAt !== null && state.stats.selfSufficientAt !== undefined ? SCORE.selfSufficient : 0)
+    + (state.stats.domeAt !== null && state.stats.domeAt !== undefined ? SCORE.dome : 0); // E.2
 }

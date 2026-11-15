@@ -674,7 +674,7 @@ test('tech: research errors, event, panel and techOptions', () => {
   assert.ok(ev.some((e) => e.type === 'tech.unlocked' && e.techId === 'eds'));
   assert.ok(ev.some((e) => e.type === 'science.panel' && e.id === 'tech.eds'));
   const opts = selectors.techOptions(s);
-  assert.equal(opts.length, 8);
+  assert.equal(opts.length, Object.keys(TECHS).length);
   const f = opts.find((o) => o.id === 'fission');
   assert.deepEqual([f.cost, f.requires, f.unlocked, f.ok], [70, ['eds'], false, true]);
   assert.equal(opts.find((o) => o.id === 'eds').unlocked, true);
@@ -1366,6 +1366,267 @@ test('conjunction: blackout timing, events, panel, no warning without the tech, 
   assert.equal(blk.length, 2);
   assert.ok(Math.abs(blk[1] - blk[0] - SHIP.intervalSols) < 0.02);
   assert.ok(blk[0] >= EVENTS.graceSols);
+});
+
+// ---------- Apêndice E: expansion ----------
+const slotAt = (s, id) => s.slots.find((x) => x.id === id);
+test('E.1 map: 36 slots in a 6x6 grid, new start slots, story remapped to the middle', () => {
+  const g = createGame({ seed: 1 });
+  const s = g.state;
+  assert.equal(s.slots.length, 36);
+  assert.deepEqual([s.slots[0].id, s.slots[0].gx, s.slots[0].gz], ['s1', 0, 0]);
+  assert.deepEqual([s.slots[7].id, s.slots[7].gx, s.slots[7].gz], ['s8', 1, 1]);
+  assert.deepEqual([s.slots[35].id, s.slots[35].gx, s.slots[35].gz], ['s36', 5, 5]);
+  assert.equal(slotAt(s, 's15').module.type, 'habitat');
+  assert.equal(slotAt(s, 's16').module.type, 'solar');
+  assert.equal(slotAt(s, 's21').module.type, 'battery');
+  assert.equal(s.slots.filter((x) => x.module).length, 3);
+  for (const n of [1, 2, 3]) {
+    const st = createGame({ mode: 'story', chapter: n }).state;
+    for (const sl of st.slots) if (sl.module) assert.ok(sl.gx >= 1 && sl.gx <= 4 && sl.gz >= 1 && sl.gz <= 4, `chapter ${n}: ${sl.id} outside the middle`);
+  }
+});
+
+test('E.1 migration: a 16-slot save gets 36 slots, modules shifted (+1,+1), ids that point at slots follow', () => {
+  const g = createGame({ seed: 3 });
+  const old = JSON.parse(g.serialize());
+  const cur = JSON.parse(g.serialize()).slots;
+  // rebuild the pre-E state: the old 4x4 map with the old start base, old unlocked list, no health / methane
+  old.slots = Array.from({ length: 16 }, (_, i) => ({ id: `s${i + 1}`, gx: i % 4, gz: Math.floor(i / 4), module: null }));
+  old.slots[5].module = cur[14].module; old.slots[6].module = cur[15].module; old.slots[9].module = cur[20].module;
+  old.slots[1].module = { ...cur[15].module, type: 'moxie', staff: [old.colonists[0].id] };
+  old.colonists[0].assignedTo = 's2'; old.colonists[0].location = 'module';
+  old.sim.shedAt = { s2: 0.1 };
+  old.unlocked.modules = ['habitat', 'solar', 'battery', 'moxie', 'extractor', 'greenhouse', 'shelter'];
+  delete old.health; delete old.resources.methane; delete old.stats.domeAt; old.version = 2;
+  const h = loadGame(JSON.stringify(old));
+  const s = h.state;
+  assert.equal(s.slots.length, 36);
+  assert.equal(slotAt(s, 's15').module.type, 'habitat');
+  assert.equal(slotAt(s, 's16').module.type, 'solar');
+  assert.equal(slotAt(s, 's21').module.type, 'battery');
+  assert.equal(slotAt(s, 's9').module.type, 'moxie', 'old s2 (1,0) -> (2,1) = s9');
+  assert.equal(s.colonists[0].assignedTo, 's9');
+  assert.deepEqual(Object.keys(s.sim.shedAt), ['s9']);
+  assert.equal(s.slots.filter((x) => x.module).length, 4);
+  assert.equal(s.health, 100);
+  assert.equal(s.resources.methane, 0);
+  assert.ok(s.unlocked.modules.includes('gym') && !s.unlocked.modules.includes('mine'));
+  h.tick(10);
+  assert.ok(h.state.t > 10);
+  assert.equal(loadGame(h.serialize()).serialize(), h.serialize(), 'a migrated save round-trips');
+});
+
+test('E.2 support modules: thermal, pressurizer, waterFilter, decon, warehouse; staff rules', () => {
+  const g = bareGame();
+  const s = g.state;
+  place(g, 's1', 'habitat'); place(g, 's2', 'reactor', 3); place(g, 's3', 'battery', 3); place(g, 's4', 'extractor');
+  s.resources.energy = 100;
+  g.tick(TIME.STEP);
+  near(selectors.moduleRates(s, 's1').use, 24, 1e-9, 'habitat use');
+  place(g, 's5', 'thermal', 2);
+  near(selectors.moduleRates(s, 's1').use, 24 * 0.7, 1e-9, 'thermal N2 -30%');
+  place(g, 's6', 'thermal', 3);
+  near(selectors.moduleRates(s, 's1').use, 24 * 0.55, 1e-9, 'capped at -45%');
+  assert.equal(selectors.capacity(s).crew, 4);
+  place(g, 's7', 'pressurizer', 2);
+  assert.equal(selectors.capacity(s).crew, 8, 'pressurizer N2 +4');
+  near(selectors.moduleRates(s, 's4').water, 6, 1e-9, 'extractor alone');
+  place(g, 's8', 'waterFilter', 1);
+  near(selectors.moduleRates(s, 's4').water, 6 * 1.2, 1e-9, 'filter +20%');
+  // decon: dust -10% per level (the bare game has no storm)
+  place(g, 's9', 'decon', 1);
+  const pan = place(g, 's10', 'solar');
+  g.tick(1);
+  near(pan.dust, C.DUST_RATE_PER_SOL * 0.9, 0.02, 'decon dust');
+  // warehouse: base caps, +100% per level, the surplus is lost
+  assert.deepEqual([selectors.capacity(s).o2, selectors.capacity(s).water, selectors.capacity(s).food], [200, 400, 300]);
+  s.resources.o2 = 199;
+  place(g, 's11', 'moxie', 3);
+  g.tick(1);
+  assert.ok(Math.abs(s.resources.o2 - 200) < 1e-9, `O2 capped at 200, got ${s.resources.o2}`);
+  place(g, 's12', 'warehouse', 1);
+  assert.equal(selectors.capacity(s).o2, 400);
+  g.tick(1);
+  assert.ok(s.resources.o2 > 200, 'grows again with a warehouse');
+  // staff: support modules take nobody; mine / factory / sabatier do (engineer bonus)
+  const eng = colonist(g, 'engineer');
+  assert.equal(g.dispatch({ type: 'assign', colonistId: eng.id, slotId: 's12' }).reason, 'err.notStaffable');
+  assert.equal(g.dispatch({ type: 'assign', colonistId: eng.id, slotId: 's5' }).reason, 'err.notStaffable');
+  place(g, 's13', 'mine');
+  assert.ok(g.dispatch({ type: 'assign', colonistId: eng.id, slotId: 's13' }).ok);
+  near(selectors.moduleRates(s, 's13').regolith, 4 * (1 + PROFESSION_BONUS), 1e-9, 'engineer on the mine');
+});
+
+test('E.2 production: mine and factory; failures hit powered expansion modules only', () => {
+  const g = bareGame();
+  const s = g.state;
+  place(g, 's1', 'habitat'); place(g, 's2', 'reactor', 3); place(g, 's3', 'battery', 3);
+  Object.assign(s.resources, { energy: 200, regolith: 10, parts: 0 });
+  place(g, 's4', 'mine', 1);
+  g.tick(1);
+  near(s.resources.regolith, 14, 0.01, 'mine regolith');
+  near(s.resources.parts, 1, 0.01, 'mine parts');
+  place(g, 's5', 'factory', 1);
+  const r0 = s.resources.regolith, p0 = s.resources.parts;
+  g.tick(1);
+  near(s.resources.parts - p0, 1 + 3, 0.01, 'factory +3 parts');
+  near(r0 - s.resources.regolith, 6 - 4, 0.01, 'factory uses 2 regolith per part');
+  s.resources.regolith = 0;
+  s.slots[3].module.enabled = false;
+  g.tick(0.5);
+  assert.equal(selectors.moduleRates(s, 's5').parts, 0, 'no regolith, no parts');
+  // failure: a warehouse (passive) never breaks, a gym (powered) can
+  const f = bareGame(2);
+  place(f, 's1', 'habitat'); place(f, 's2', 'reactor', 3); place(f, 's3', 'battery', 3);
+  place(f, 's4', 'warehouse'); place(f, 's5', 'gym');
+  f.state.resources.energy = 100;
+  f.state.events.scheduled.push({ atT: 0.5, kind: 'failure', params: { slotId: 's4' } });
+  f.tick(0.3);
+  const ev = evOf(f.drainEvents(), 'event.start', 'failure');
+  assert.equal(ev.length, 1);
+  assert.ok(['s2', 's5'].includes(ev[0].slotId), `warehouse cannot fail (${ev[0].slotId})`);
+  const f2 = bareGame(2);
+  place(f2, 's1', 'habitat'); place(f2, 's3', 'battery', 3); place(f2, 's5', 'gym');
+  f2.state.resources.energy = 100;
+  f2.state.events.scheduled.push({ atT: 0.5, kind: 'failure', params: { slotId: 's5' } });
+  f2.tick(0.3);
+  assert.equal(evOf(f2.drainEvents(), 'event.start', 'failure')[0].slotId, 's5', 'a gym can fail');
+});
+
+test('E.2 sabatier: makes methane by day (power + water), burns it at night or on a low battery, never makes energy', () => {
+  const g = bareGame();
+  const s = g.state;
+  place(g, 's1', 'habitat'); place(g, 's2', 'solar', 3); place(g, 's3', 'solar', 3); place(g, 's4', 'battery', 3);
+  place(g, 's5', 'sabatier');
+  Object.assign(s.resources, { energy: 150, water: 100, methane: 0 });
+  while (s.env.sun <= 0.2) g.tick(TIME.STEP);
+  const w0 = s.resources.water;
+  const r = selectors.moduleRates(s, 's5');
+  assert.deepEqual([r.use, r.gen, r.water, r.methane], [40, 0, -1, 4], 'day: make mode');
+  g.tick(0.1);
+  assert.ok(s.resources.methane > 0.3, 'methane made');
+  assert.ok(s.resources.water < w0, 'water used');
+  while (s.env.sun > 0) g.tick(TIME.STEP);
+  const night = selectors.moduleRates(s, 's5');
+  assert.equal(night.use, 0);
+  assert.equal(night.gen, 30);
+  const m0 = s.resources.methane;
+  g.tick(0.05);
+  near(m0 - s.resources.methane, 0.05 * 30 / 5, 0.05, 'burns burn / METHANE_KWH_PER_KG kg per sol');
+  s.resources.methane = 0;
+  g.tick(TIME.STEP);
+  assert.equal(selectors.moduleRates(s, 's5').gen, 0, 'no methane, no power');
+  for (const l of MODULES.sabatier.levels) assert.ok(l.use / l.methane > 5, 'lossy storage: more kWh in than out per kg');
+  s.resources.methane = 10;
+  while (s.env.sun <= 0.2) g.tick(TIME.STEP);
+  s.resources.energy = 10;
+  assert.equal(selectors.moduleRates(s, 's5').gen, 30, 'battery < 20%: burns by day');
+});
+
+test('E.3 health: decay, starving, cadet half, gym and hospital, low-health effects, alert, panel, game over', () => {
+  const g = fortress(1); g.state.events.auto = false;
+  const s = g.state;
+  assert.equal(s.health, 100);
+  g.tick(10);
+  near(s.health, 95, 0.01, 'commander -0.5/sol');
+  const c = fortress(1, 'cadet'); c.state.events.auto = false;
+  c.tick(10);
+  near(c.state.health, 97.5, 0.01, 'cadet: half');
+  s.resources.food = 0;
+  const h0 = s.health;
+  g.tick(1);
+  near(h0 - s.health, 2.5, 0.02, 'starving -2 more');
+  s.resources.food = 200;
+  place(g, 's8', 'gym', 2);
+  const h1 = s.health;
+  g.tick(1);
+  near(s.health - h1, 2 - 0.5, 0.02, 'gym N2 +2');
+  s.slots[7].module = null;
+  s.health = 49.9;
+  g.tick(TIME.STEP);
+  const ev = g.drainEvents();
+  assert.ok(ev.some((e) => e.type === 'alert' && e.key === 'alert.healthLow'), 'alert.healthLow');
+  assert.ok(ev.some((e) => e.type === 'science.panel' && e.id === 'muscleLoss'), 'panel muscleLoss');
+  assert.ok(g.dispatch({ type: 'assign', colonistId: colonist(g, 'engineer').id, slotId: 's4' }).ok);
+  near(selectors.moduleRates(s, 's4').o2, 10, 1e-9, 'no staff bonus below 50');
+  assert.ok(g.dispatch({ type: 'build', slotId: 's9', moduleType: 'solar' }).ok);
+  g.tick(0.5);
+  near(s.slots[8].module.progress, 0.375, 0.03, 'construction 25% slower');
+  place(g, 's10', 'hospital', 1);
+  const h2 = s.health;
+  g.tick(0.5);
+  near(s.health - h2, (0.5 * 2 - 0.5) * 0.5, 0.05, 'hospital x2 below 50');
+  s.health = 0.001; s.slots[9].module = null;
+  g.tick(0.1);
+  assert.equal(s.over?.reason, 'health');
+});
+
+test('E.4 techs: unlock gating in colony mode, nothing new in story mode', () => {
+  const g = createGame({ seed: 4 });
+  const s = g.state;
+  s.events.auto = false;
+  Object.assign(s.resources, { parts: 2000, regolith: 2000, science: 1000 });
+  const opt = (t) => selectors.buildOptions(s, 's1').find((o) => o.type === t);
+  for (const t of ['gym', 'hospital', 'thermal', 'pressurizer', 'waterFilter', 'decon', 'warehouse']) assert.equal(opt(t).ok, true, `${t} free from the start`);
+  for (const t of ['sabatier', 'mine', 'factory', 'dome', 'radShield']) assert.equal(opt(t).reason, 'err.locked', `${t} locked`);
+  for (const id of ['sabatierProcess', 'robotics']) assert.ok(g.dispatch({ type: 'research', techId: id }).ok);
+  for (const t of ['sabatier', 'mine', 'factory']) assert.equal(opt(t).ok, true, `${t} after the tech`);
+  assert.equal(g.dispatch({ type: 'research', techId: 'domeEngineering' }).reason, 'err.missingPrereq');
+  assert.ok(g.dispatch({ type: 'research', techId: 'regolithPrinting' }).ok);
+  assert.ok(g.dispatch({ type: 'research', techId: 'domeEngineering' }).ok);
+  assert.ok(g.dispatch({ type: 'research', techId: 'hydrogenShield' }).ok);
+  assert.equal(opt('dome').ok, true);
+  assert.equal(opt('radShield').reason, 'err.locked', 'radShield needs a finished dome');
+  assert.deepEqual([TECHS.domeEngineering.cost, TECHS.hydrogenShield.cost, TECHS.sabatierProcess.cost, TECHS.robotics.cost], [90, 80, 30, 30]);
+  for (const n of [1, 2, 3]) {
+    const st = createGame({ mode: 'story', chapter: n }).state;
+    for (const t of ['gym', 'warehouse', 'mine', 'dome']) assert.ok(!st.unlocked.modules.includes(t), `chapter ${n}: ${t}`);
+  }
+});
+
+test('E.5 dome: 20-sol build, milestone, shield x0.85 (x0.7 more with radShield), +2000 score, cityStats', () => {
+  const g = fortress(5); g.state.events.auto = false;
+  const s = g.state;
+  s.tech.unlocked.push('regolithPrinting', 'domeEngineering', 'hydrogenShield');
+  s.unlocked.modules.push('dome', 'radShield');
+  Object.assign(s.resources, { parts: 600, regolith: 800 });
+  place(g, 's8', 'gym', 3);
+  assert.equal(selectors.cityStats(s).domeProgress, null);
+  assert.ok(g.dispatch({ type: 'build', slotId: 's20', moduleType: 'dome' }).ok);
+  assert.equal(s.resources.parts, 600 - Math.ceil(300 * 0.7));
+  assert.equal(g.dispatch({ type: 'build', slotId: 's21', moduleType: 'dome' }).reason, 'err.unique');
+  g.tick(10);
+  near(selectors.cityStats(s).domeProgress, 0.5, 0.02, 'half way');
+  const sc = selectors.score(s);
+  g.tick(10.05);
+  const ev = g.drainEvents();
+  assert.equal(ev.filter((e) => e.type === 'milestone' && e.id === 'dome').length, 1);
+  assert.ok(selectors.score(s) - sc >= SCORE.dome);
+  const c = s.colonists.find((x) => x.location === 'habitat');
+  const d0 = c.dose; g.tick(1);
+  near(c.dose - d0, C.GCR_SURFACE_MSV_PER_SOL * 0.6 * 0.85 * C.ALARA_FACTOR, 0.01, 'dome GCR shield');
+  assert.ok(g.dispatch({ type: 'build', slotId: 's21', moduleType: 'radShield' }).ok);
+  g.tick(8.05);
+  const d1 = c.dose; g.tick(1);
+  near(c.dose - d1, C.GCR_SURFACE_MSV_PER_SOL * 0.6 * 0.85 * 0.7 * C.ALARA_FACTOR, 0.01, 'radShield');
+  const cs = selectors.cityStats(s);
+  assert.equal(cs.domeProgress, 1);
+  assert.deepEqual(Object.keys(cs).sort(), ['crewCapacity', 'domeProgress', 'health', 'modules', 'population', 'powerGen', 'powerUse', 'storage', 'techs'].sort());
+  assert.deepEqual(Object.keys(cs.storage.o2), ['amount', 'cap']);
+  assert.equal(cs.modules, s.slots.filter((x) => x.module).length);
+  assert.equal(cs.techs, s.tech.unlocked.length);
+});
+
+test('bot: competent bot finishes the dome on cadet within 400 sols in >= 5 of 10 seeds', () => {
+  let ok = 0;
+  const at = [];
+  for (let seed = 1; seed <= 10; seed++) {
+    const { game } = runBot(createGame, competentBot, { seed, sols: 400, difficulty: 'cadet', every: 0.1 });
+    if (game.state.stats.domeAt !== null) { ok++; at.push(Math.floor(game.state.stats.domeAt) + 1); }
+  }
+  if (REPORT) console.log(`  dome on cadet: ${ok}/10, sols ${at.join(', ')}`);
+  assert.ok(ok >= 5, `dome in ${ok} of 10 seeds`);
 });
 
 // ---------- report ----------

@@ -3,6 +3,7 @@
 // spaceWeather (events.speWarningSols), regolithPrinting (model.effectiveCost, build.checkUpgrade),
 // pressurizedRover (expeditions.roverCount, radiation.js), fission (unlocks the reactor here).
 import { TECHS } from '../data/tech.js';
+import { MODULES, EXPANSION_MODULES } from '../data/balance.js';
 import { hasTech } from './model.js';
 import { showPanel } from './alerts.js';
 
@@ -22,7 +23,13 @@ export function actResearch(state, { techId }, emit) {
   if (err) return err;
   state.resources.science = Math.max(0, state.resources.science - TECHS[techId].cost);
   state.tech.unlocked.push(techId);
-  if (techId === 'fission' && !state.unlocked.modules.includes('reactor')) state.unlocked.modules.push('reactor');
+  // the tech unlocks every module that requires it (fission -> reactor; E.4: robotics -> mine and factory, ...);
+  // the story never unlocks the expansion modules
+  for (const [type, def] of Object.entries(MODULES)) {
+    if (def.requiresTech !== techId || state.unlocked.modules.includes(type)) continue;
+    if (state.mode === 'story' && EXPANSION_MODULES.includes(type)) continue;
+    state.unlocked.modules.push(type);
+  }
   emit({ type: 'tech.unlocked', techId });
   showPanel(state, emit, `tech.${techId}`);
   return null;

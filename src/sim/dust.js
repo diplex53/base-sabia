@@ -5,7 +5,7 @@
 import { DUST_RATE_PER_SOL, DUST_STORM_MULT, DUST_MAX } from '../data/constants.js';
 import { CLEAN_SOLS, ENGINEER_SPEED } from '../data/balance.js';
 import { TECH_EFFECTS } from '../data/tech.js';
-import { isBuilt, hasTech, professionOnBase } from './model.js';
+import { isBuilt, hasTech, professionOnBase, deconDustCut } from './model.js';
 import { showPanel } from './alerts.js';
 
 export const DUST_PANEL_THRESHOLD = 0.10;
@@ -14,7 +14,7 @@ export const DUST_PANEL_THRESHOLD = 0.10;
 export function dustRate(state) {
   const storm = DUST_STORM_MULT[state.env.storm ? state.env.storm.kind : 'none'] ?? 1;
   const eds = hasTech(state, 'eds') ? TECH_EFFECTS.edsDustMult : 1;
-  return DUST_RATE_PER_SOL * storm * eds;
+  return DUST_RATE_PER_SOL * storm * eds * (1 - deconDustCut(state)); // E.2 decon
 }
 
 /** Speed of crew work (cleaning, repair): 0 while sheltering, x ENGINEER_SPEED with an engineer on base. */

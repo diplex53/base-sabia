@@ -1,9 +1,9 @@
 // Construction (Apêndice A.3/A.4): build, upgrade, demolish, toggle, clean, and build progress.
 // Cost is paid up front (parts x0.7 with regolithPrinting, B.6). Demolish refunds 50% (rounded down)
 // of everything spent on the module. Construction does not advance while everyone is sheltering (B.3).
-import { MODULES } from '../data/balance.js';
+import { MODULES, HEALTH } from '../data/balance.js';
 import { newModule } from './state.js';
-import { isBuilt, levelSpec, peopleCapacity, headcount, batteryCapacity, effectiveCost, hasTech } from './model.js';
+import { isBuilt, levelSpec, peopleCapacity, headcount, batteryCapacity, effectiveCost, hasTech, healthLow } from './model.js';
 import { clearStaff } from './colonists.js';
 import { showPanel } from './alerts.js';
 
@@ -35,6 +35,7 @@ export function checkBuild(state, slotId, type) {
   if (!def) return 'err.unknownModule';
   if (!state.unlocked.modules.includes(type)) return 'err.locked';
   if (def.requiresTech && !hasTech(state, def.requiresTech)) return 'err.locked';
+  if (def.requiresBuilt && !state.slots.some((s) => s.module && s.module.type === def.requiresBuilt && isBuilt(s.module))) return 'err.locked';
   if (def.unique && state.slots.some((s) => s.module && s.module.type === type)) return 'err.unique';
   return checkCost(state, levelCost(state, type, 1));
 }
@@ -119,11 +120,12 @@ export function actClean(state, { slotId }) {
 /** Advance 'building' and 'upgrading' modules; emit build.done on completion. Paused while sheltering (B.3). */
 export function stepConstruction(state, dt, emit) {
   if (state.sheltering) return;
+  const speed = healthLow(state) ? HEALTH.slowBuild : 1; // E.3: 25% slower below 50 health
   for (const sl of state.slots) {
     const m = sl.module;
     if (!m || (m.status !== 'building' && m.status !== 'upgrading')) continue;
     const target = m.status === 'building' ? m.level : m.level + 1;
-    m.progress += dt / MODULES[m.type].levels[target - 1].buildSols;
+    m.progress += dt * speed / MODULES[m.type].levels[target - 1].buildSols;
     if (m.progress < 1 - 1e-9) continue;
     const wasBuilding = m.status === 'building';
     m.level = target;
@@ -131,5 +133,9 @@ export function stepConstruction(state, dt, emit) {
     m.progress = 0;
     emit({ type: 'build.done', slotId: sl.id, moduleType: m.type, level: m.level });
     if (wasBuilding && m.type === 'moxie') showPanel(state, emit, 'moxieEnergy');
+    if (wasBuilding && m.type === 'dome' && !state.stats.domeAt) { // E.2 megaproject
+      state.stats.domeAt = state.t;
+      emit({ type: 'milestone', id: 'dome' });
+    }
   }
 }

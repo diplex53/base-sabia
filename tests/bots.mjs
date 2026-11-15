@@ -17,7 +17,7 @@ function useOf(type, s) {
   if (type === 'moxie') return s.o2 * MOXIE_KWH_PER_KG;
   if (type === 'extractor') return s.water * EXTRACTOR_KWH_PER_KG;
   if (type === 'greenhouse') return s.area * GH_KWH_PER_M2_SOL;
-  return 0;
+  return s.use || 0; // expansion modules (E.2); the sabatier is never built by the bots
 }
 
 /** Planning view: modules counted at the level they will have once current work finishes. */
@@ -50,7 +50,7 @@ function plan(state) {
 // the old 4x4 order, moved to the middle of the 6x6 map (Apêndice E.1), then the outer ring
 const CORE_SLOTS = ['s7', 's10', 's2', 's3', 's5', 's8', 's11', 's9', 's12', 's14', 's15', 's1', 's4', 's13', 's16', 's6'].map(oldSlotToNew);
 const PREFERRED_SLOTS = [...CORE_SLOTS, ...SLOTS.map((s) => s.id).filter((id) => !CORE_SLOTS.includes(id))];
-const RESEARCH_ORDER = ['eds', 'spaceWeather', 'fission', 'waterRecycling', 'regolithPrinting', 'plantHabitat', 'bioregen', 'pressurizedRover'];
+const RESEARCH_ORDER = ['eds', 'spaceWeather', 'fission', 'waterRecycling', 'regolithPrinting', 'robotics', 'domeEngineering', 'plantHabitat', 'bioregen', 'pressurizedRover', 'hydrogenShield'];
 const MATCH = { engineer: ['moxie', 'solar', 'reactor', 'extractor'], botanist: ['greenhouse'] };
 
 /** Builds nothing, ever. */
@@ -117,7 +117,7 @@ function powerBudget(game, need) {
   let budget = gen - habitat + Math.max(0, r.energy - 0.6 * cap);
   const o2Low = r.o2 < 10 * need.o2;
   const waterLow = r.water < 60;
-  const rank = (t) => ({ extractor: waterLow ? 0 : 3, moxie: o2Low ? 1 : 2, greenhouse: o2Low ? 2 : 1 })[t];
+  const rank = (t) => ({ extractor: waterLow ? 0 : 3, moxie: o2Low ? 1 : 2, greenhouse: o2Low ? 2 : 1, gym: 1.5 })[t] ?? 4;
   consumers.sort((a, b) => rank(a.m.type) - rank(b.m.type));
   for (const c of consumers) {
     const on = c.u <= budget + 1e-9;
@@ -210,6 +210,15 @@ function build(game, crewNeed) {
       return (hab && d({ type: 'upgrade', slotId: hab.id })) || buildOrUpgrade('habitat', 1);
     };
     const sNext = short(n + cand);
+    // E.2 / E.3: a gym before health gets low, a warehouse when a stock nears its cap, the dome when it can
+    const capNow = sel.capacity(s);
+    const nearCap = ['o2', 'water', 'food'].some((k) => r[k] > 0.85 * capNow[k]);
+    const gymLevels = of('gym').reduce((a, sl) => a + sl.module.level, 0);
+    const savingForDome = has(s, 'domeEngineering') && !of('dome').length && n >= 8;
+    const dome = () => {
+      const slot = freeSlot(p);
+      return !!slot && costOk(costOf('dome')) && d({ type: 'build', slotId: slot, moduleType: 'dome' });
+    };
     // priorities, first one that acts wins; a "block" entry means "save parts for this, do nothing else"
     const rules = [
       [() => !of('moxie').length, () => d({ type: 'build', slotId: freeSlot(p), moduleType: 'moxie' }), true],
@@ -219,9 +228,14 @@ function build(game, crewNeed) {
       [() => sNow.o2 > 0, () => consumer(75, 'moxie', () => buildOrUpgrade('moxie', 2, true)), true],
       [() => sNow.water > 0, () => consumer(6, 'extractor', () => buildOrUpgrade('extractor', 2, true)), true],
       [() => !of('shelter').length && r.regolith >= 40 && r.parts >= 4, () => buildOrUpgrade('shelter', 1)],
+      [() => s.health < 92 && gymLevels === 0, () => consumer(8, 'gym', () => buildOrUpgrade('gym', 1)), s.health < 70],
+      [() => s.health < 60 && gymLevels < 2, () => consumer(4, 'gym', () => upgradeCheapest('gym'))],
       [() => sNow.food > 0 && r.regolith >= 10, greenhouse],
       [() => p.crew < n + cand && r.regolith >= 20 && r.parts >= 15, moreHabitat],
       [() => has(s, 'fission') && !of('reactor').length, power],
+      [() => nearCap && r.regolith >= 20 && r.parts >= 10, () => buildOrUpgrade('warehouse', 2, true)],
+      [() => savingForDome && p.crew >= n, dome, true],
+      [() => has(s, 'robotics') && !of('mine').length && r.parts >= 30, () => consumer(25, 'mine', () => buildOrUpgrade('mine', 2))],
       [() => p.shelter < n && r.regolith >= 60, () => buildOrUpgrade('shelter', 3, true)],
       // get ready for the next ship's candidates
       [() => sNext.o2 > 0, () => consumer(75, 'moxie', () => buildOrUpgrade('moxie', 2, true))],
@@ -251,7 +265,8 @@ function expeditions(game, need) {
     || free.find((c) => !c.assignedTo && !(c.profession === 'medic' && medics < 2) && !(c.profession === 'engineer' && engineers < 2));
   if (!pick) return;
   const waterShort = r.water < 25 * need.water + 40 && sel.netPerSol(s).water < 0;
-  const site = r.regolith < 70 ? 'regolith' : waterShort ? 'ice' : 'minerals';
+  const regolithGoal = has(s, 'domeEngineering') && !s.slots.some((sl) => sl.module && sl.module.type === 'dome') ? 420 : 70;
+  const site = waterShort && r.regolith >= 70 ? 'ice' : r.regolith < regolithGoal ? 'regolith' : waterShort ? 'ice' : 'minerals';
   const opt = sel.expeditionOptions(s).find((x) => x.site === site);
   if (!opt.ok || r.energy < EXPEDITIONS[site].energy + 0.3 * cap) return;
   game.dispatch({ type: 'startExpedition', site, colonistId: pick.id });

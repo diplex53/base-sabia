@@ -1,5 +1,7 @@
 // Colonists: assignment (Apêndice A.4 'assign') and retirement.
 // A module holds at most one colonist; an assigned colonist gives the module +STAFF_BONUS.
+// Expansion modules (E.2) take no staff, except mine, factory and sabatier (staffable !== false).
+import { MODULES } from '../data/balance.js';
 
 export const findColonist = (state, id) => state.colonists.find((c) => c.id === id);
 
@@ -34,6 +36,7 @@ export function actAssign(state, { colonistId, slotId }) {
   const sl = state.slots.find((s) => s.id === slotId);
   if (!sl) return 'err.noSuchSlot';
   if (!sl.module) return 'err.slotEmpty';
+  if (MODULES[sl.module.type].staffable === false) return 'err.notStaffable';
   if (sl.module.staff.length > 0 && sl.module.staff[0] !== c.id) return 'err.busy';
   if (c.assignedTo === slotId) return null;
   unassign(state, c);

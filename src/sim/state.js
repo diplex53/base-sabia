@@ -4,7 +4,7 @@ import { TIME, SLOTS, START, SHIP, COLONIST_NAMES, MODULES, DIFFICULTY, PROFESSI
 import { seedToUint32, random } from './rng.js';
 import { CHAPTERS, STORY_FEATURES } from '../data/story.js';
 
-export const STATE_VERSION = 2;
+export const STATE_VERSION = 3;
 
 /** A fresh module record. `spent` = everything paid for it (for the 50% demolish refund). */
 export function newModule(type, level, status) {
@@ -39,7 +39,7 @@ export function createInitialState({ mode = 'colony', chapter = 0, seed, difficu
   const chapterDef = mode === 'story' ? CHAPTERS[chapter] : null;
   const start = chapterDef ? chapterDef.start : START.colony;
   const dif = DIFFICULTY[difficulty];
-  const resources = { ...start.resources };
+  const resources = { methane: 0, ...start.resources };
   // Apêndice B.1: startMult on O2, water, food and parts; regolith from the difficulty
   if (!chapterDef) {
     for (const k of ['o2', 'water', 'food', 'parts']) resources[k] = Math.round(resources[k] * dif.startMult);
@@ -64,7 +64,8 @@ export function createInitialState({ mode = 'colony', chapter = 0, seed, difficu
     timers: { o2Out: 0, waterOut: 0, foodOut: 0, blackout: 0 },
     story: null,
     realSun: null,
-    stats: { popPeak: 0, panelsSeen: [], selfSufficientAt: null },
+    stats: { popPeak: 0, panelsSeen: [], selfSufficientAt: null, domeAt: null },
+    health: 100, // Apêndice E.3
     over: null,
     // Core bookkeeping (not part of the UI contract): step remainder, id counters,
     // which alerts are currently raised, when each module was shed, milestone streak.
@@ -122,6 +123,11 @@ function migrateSlots(state) {
 export function migrateState(state) {
   migrateSlots(state);
   if (!state.difficulty) state.difficulty = 'commander';
+  if (state.resources.methane === undefined) state.resources.methane = 0;
+  if (state.health === undefined) state.health = 100;
+  if (state.stats.domeAt === undefined) state.stats.domeAt = null;
+  // E.4: colony saves from before the expansion get the modules that need no tech
+  if (state.mode !== 'story') for (const t of START.colony.unlocked) if (!state.unlocked.modules.includes(t)) state.unlocked.modules.push(t);
   if (state.realSun === undefined) state.realSun = null;
   if (!state.unlocked.features) state.unlocked.features = [...STORY_FEATURES];
   if (state.unlocked.techs === undefined) state.unlocked.techs = null;

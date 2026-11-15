@@ -19,7 +19,7 @@ export function stepEnergy(state, dt, emit) {
     const m = sl.module;
     if (!m) return;
     gen += genRate(state, m, sunFactor);
-    if (isConsumerType(m.type) && isOperating(state, m)) consumers.push({ sl, m, idx, use: nominalUse(m) });
+    if (isConsumerType(m.type) && isOperating(state, m)) consumers.push({ sl, m, idx, use: nominalUse(m, state) });
   });
 
   const cap = batteryCapacity(state);
@@ -29,7 +29,7 @@ export function stepEnergy(state, dt, emit) {
 
   if (!fits(load)) {
     // shed: first type in SHED_ORDER first, later slots first
-    const order = consumers.filter((c) => c.m.powered)
+    const order = consumers.filter((c) => c.m.powered && c.use > 0)
       .sort((a, b) => shedRank(a.m.type) - shedRank(b.m.type) || b.idx - a.idx);
     for (const c of order) {
       if (fits(load)) break;
