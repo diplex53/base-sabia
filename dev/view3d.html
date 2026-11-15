@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Base Sabiá - 3D view test</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #1a1210; font: 13px system-ui, sans-serif; color: #fff; }
+  #view { position: fixed; inset: 0; }
+  #bar { position: fixed; top: 8px; left: 8px; right: 8px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; pointer-events: none; }
+  #bar > * { pointer-events: auto; }
+  button { background: rgba(20, 14, 12, 0.75); color: #fff; border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 6px; padding: 5px 9px; cursor: pointer; font: inherit; }
+  button.on { background: #e06a2a; border-color: #e06a2a; }
+  label, #info { background: rgba(20, 14, 12, 0.75); padding: 5px 9px; border-radius: 6px; }
+  #info { position: fixed; left: 8px; bottom: 8px; font-family: ui-monospace, monospace; white-space: pre; }
+</style>
+<script type="importmap">{"imports":{"three":"../src/vendor/three/three.module.js","three/addons/":"../src/vendor/three/addons/"}}</script>
+</head>
+<body>
+<div id="view"></div>
+<div id="bar"></div>
+<div id="info">loading...</div>
+<script type="module">
+import { makeFixture, VARIANTS, sunAt } from '../src/dev/fixtureState.js';
+
+const info = document.getElementById('info');
+const bar = document.getElementById('bar');
+let view, state, variant = new URLSearchParams(location.search).get('v') || 'full';
+let lastClick = '-';
+let animate = false;
+const pendingEvents = [];
+
+try {
+  const { createView } = await import('../src/render3d/view3d.js');
+  view = createView(document.getElementById('view'), {
+    onSlotClick(id) { lastClick = 'slot ' + id; view.setSelected(id); },
+    onSiteClick(id) { lastClick = 'site ' + id; },
+  });
+} catch (e) {
+  info.textContent = 'createView failed: ' + (e && e.message || e);
+  throw e;
+}
+
+const buttons = {};
+for (const v of VARIANTS) {
+  const b = document.createElement('button');
+  b.textContent = v;
+  b.onclick = () => load(v);
+  bar.appendChild(b);
+  buttons[v] = b;
+}
+const lab = document.createElement('label');
+lab.innerHTML = '<input type="checkbox" id="anim"> animate time (1 sol = 24 s)';
+bar.appendChild(lab);
+const over = document.createElement('label');
+over.innerHTML = '<input type="checkbox" id="over"> game over';
+bar.appendChild(over);
+const arr = document.createElement('button');
+arr.textContent = 'event ship.arrived';
+arr.onclick = () => { state.ship = { nextArrivalT: state.t + 26, manifest: null, awaitingDecision: true, offer: [] }; pendingEvents.push({ type: 'ship.arrived', t: state.t, cargo: {}, departed: [], offer: [] }); };
+bar.appendChild(arr);
+const dec = document.createElement('button');
+dec.textContent = 'ship decided (take off)';
+dec.onclick = () => { state.ship.awaitingDecision = false; };
+bar.appendChild(dec);
+const ins = document.createElement('label');
+ins.innerHTML = '<input type="checkbox" id="ins"> HUD insets (120/300/300/0)';
+bar.appendChild(ins);
+document.getElementById('ins').onchange = (e) => view.setInsets(e.target.checked ? { top: 120, left: 300, right: 300, bottom: 0 } : { top: 0, left: 0, right: 0, bottom: 0 });
+const desel = document.createElement('button');
+desel.textContent = 'deselect';
+desel.onclick = () => view.setSelected(null);
+bar.appendChild(desel);
+document.getElementById('anim').onchange = (e) => { animate = e.target.checked; };
+document.getElementById('over').onchange = (e) => { state.over = e.target.checked ? { reason: 'o2', score: 1234 } : null; };
+
+function load(v) {
+  variant = v;
+  state = makeFixture(v);
+  state.over = document.getElementById('over').checked ? { reason: 'o2', score: 1234 } : null;
+  for (const k in buttons) buttons[k].classList.toggle('on', k === v);
+  history.replaceState(null, '', '?v=' + v);
+}
+load(variant);
+window.__dev = { get state() { return state; }, view, load };
+
+let last = performance.now(), frames = 0, fps = 0, acc = 0;
+function loop(now) {
+  const dt = Math.min(0.1, (now - last) / 1000);
+  last = now;
+  if (animate) {
+    state.t += dt / 24;
+    state.env.sun = sunAt(state.t);
+  }
+  view.update(state, pendingEvents.length ? pendingEvents.splice(0) : [], dt);
+  frames++; acc += dt;
+  if (acc >= 0.5) { fps = frames / acc; frames = 0; acc = 0; }
+  const f = ((state.t % 1) + 1) % 1;
+  const i = view._info ? view._info() : { calls: '?', triangles: '?' };
+  info.textContent = `${variant}  t=${state.t.toFixed(3)} (f=${f.toFixed(2)}) sun=${state.env.sun.toFixed(2)} tau=${state.env.tau}\n` +
+    `fps ${fps.toFixed(0)}  draw calls ${i.calls}  tris ${i.triangles}\nlast click: ${lastClick}`;
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Base Sabiá</title>
+  <meta name="description" content="Base Sabiá: educational Mars colony game with real NASA data.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%23d9683a'/%3E%3Ccircle cx='11' cy='12' r='3' fill='%23b4502b'/%3E%3Ccircle cx='21' cy='20' r='4' fill='%23b4502b'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="css/style.css">
+  <script type="importmap">
+  {"imports":{"three":"./src/vendor/three/three.module.js","three/addons/":"./src/vendor/three/addons/"}}
+  </script>
+</head>
+<body>
+  <div id="view"></div>
+
+  <div id="hud" data-tab="">
+    <header id="topbar"></header>
+
+    <div id="left-stack">
+      <section id="colonists-panel" class="panel" aria-labelledby="h-col">
+        <h2 id="h-col" data-i18n="ui.colonists">Colonos</h2>
+        <div class="panel-body"></div>
+      </section>
+      <section id="alerts-panel" class="panel" aria-labelledby="h-alerts">
+        <h2 id="h-alerts" data-i18n="ui.alerts">Alertas</h2>
+        <div class="panel-body"></div>
+      </section>
+    </div>
+
+    <section id="slot-panel" class="panel" aria-labelledby="h-slot">
+      <h2 id="h-slot" data-i18n="ui.slotPanel">Módulo</h2>
+      <div class="panel-body"></div>
+    </section>
+
+    <nav id="sheet-tabs" data-i18n-aria="ui.tabs" aria-label="Painéis">
+      <button type="button" data-tab="base" aria-pressed="false" data-i18n="ui.tabBase">Base</button>
+      <button type="button" data-tab="colonists" aria-pressed="false" data-i18n="ui.tabColonists">Colonos</button>
+      <button type="button" data-tab="slot" aria-pressed="false" data-i18n="ui.tabModule">Módulo</button>
+    </nav>
+  </div>
+
+  <div id="modal-root"></div>
+  <div id="toast-root" role="status" aria-live="polite"></div>
+
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>

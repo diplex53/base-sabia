@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Three.js vendor check</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #111; }
+  canvas { display: block; width: 100vw; height: 100vh; }
+  #status { position: fixed; top: 8px; left: 8px; margin: 0; color: #fff; font: 14px monospace; }
+</style>
+<script type="importmap">{"imports":{"three":"../src/vendor/three/three.module.js","three/addons/":"../src/vendor/three/addons/"}}</script>
+</head>
+<body>
+<p id="status">loading...</p>
+<script type="module">
+const status = document.getElementById('status');
+try {
+  const THREE = await import('three');
+  const { OrbitControls } = await import('three/addons/controls/OrbitControls.js');
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setPixelRatio(window.devicePixelRatio);
+  document.body.appendChild(renderer.domElement);
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x111111);
+  const camera = new THREE.OrthographicCamera(-2, 2, 2, -2, 0.1, 100);
+  camera.position.set(3, 3, 3);
+  camera.lookAt(0, 0, 0);
+  const controls = new OrbitControls(camera, renderer.domElement);
+  const cube = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshLambertMaterial({ color: 0xff8800 }));
+  scene.add(cube);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+  const sun = new THREE.DirectionalLight(0xffffff, 2);
+  sun.position.set(2, 4, 3);
+  scene.add(sun);
+  function resize() {
+    const w = window.innerWidth, h = window.innerHeight, a = w / h, s = 2;
+    renderer.setSize(w, h);
+    camera.left = -s * a; camera.right = s * a; camera.top = s; camera.bottom = -s;
+    camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize', resize);
+  resize();
+  renderer.setAnimationLoop(() => {
+    cube.rotation.x += 0.01;
+    cube.rotation.y += 0.015;
+    controls.update();
+    renderer.render(scene, camera);
+  });
+  status.textContent = `THREE r${THREE.REVISION} ok`;
+} catch (e) {
+  status.textContent = String(e && e.message || e);
+}
+</script>
+</body>
+</html>

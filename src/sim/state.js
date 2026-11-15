@@ -1,0 +1,115 @@
+// Initial state (Apêndice A.3 + B). Plain JSON data only.
+import { TAU_CLEAR, TRANSIT_DOSE_MSV } from '../data/constants.js';
+import { TIME, SLOTS, START, SHIP, COLONIST_NAMES, MODULES, DIFFICULTY, PROFESSIONS } from '../data/balance.js';
+import { seedToUint32, random } from './rng.js';
+import { CHAPTERS, STORY_FEATURES } from '../data/story.js';
+
+export const STATE_VERSION = 2;
+
+/** A fresh module record. `spent` = everything paid for it (for the 50% demolish refund). */
+export function newModule(type, level, status) {
+  return {
+    type, level, enabled: true, powered: true, status,
+    progress: 0, dust: 0, growth: 0, unpoweredSols: 0, staff: [],
+    spent: { parts: 0, regolith: 0 },
+  };
+}
+
+/** Pick a name not used on the base nor in `exclude` (seeded); falls back to any name once all are used. */
+export function pickName(state, exclude = []) {
+  const used = new Set([...state.colonists.map((c) => c.name), ...exclude]);
+  const free = COLONIST_NAMES.filter((n) => !used.has(n));
+  const pool = free.length ? free : COLONIST_NAMES;
+  return pool[Math.floor(random(state) * pool.length)];
+}
+
+/** A new colonist; name and profession may come from a ship manifest (Apêndice B.5). */
+export function newColonist(state, { name, profession = null } = {}) {
+  const id = `c${state.sim.nextColonistId++}`;
+  return { id, name: name || pickName(state), profession, dose: TRANSIT_DOSE_MSV, location: 'habitat', assignedTo: null, status: 'active' };
+}
+
+/** Empty events block (Apêndice B.2). `auto: false` stops the random draw (scheduled events still fire). */
+export const newEventsState = () => ({ last: { regional: null, global: null, spe: null }, scheduled: [], auto: true });
+
+export function createInitialState({ mode = 'colony', chapter = 0, seed, difficulty = 'commander' } = {}) {
+  if (!['colony', 'story'].includes(mode)) throw new Error(`unknown mode '${mode}'`);
+  if (mode === 'story' && !CHAPTERS[chapter]) throw new Error(`unknown chapter '${chapter}'`);
+  if (!DIFFICULTY[difficulty]) throw new Error(`unknown difficulty '${difficulty}'`);
+  const chapterDef = mode === 'story' ? CHAPTERS[chapter] : null;
+  const start = chapterDef ? chapterDef.start : START.colony;
+  const dif = DIFFICULTY[difficulty];
+  const resources = { ...start.resources };
+  // Apêndice B.1: startMult on O2, water, food and parts; regolith from the difficulty
+  if (!chapterDef) {
+    for (const k of ['o2', 'water', 'food', 'parts']) resources[k] = Math.round(resources[k] * dif.startMult);
+    resources.regolith = dif.regolithStart;
+  }
+  const state = {
+    version: STATE_VERSION,
+    mode, chapter, seed, difficulty,
+    rng: seedToUint32(seed),
+    t: chapterDef ? chapterDef.startT : TIME.START_T,
+    resources,
+    rates: { energyGen: 0, energyUse: 0, o2Prod: 0, o2Use: 0, waterProd: 0, waterUse: 0, foodProd: 0, foodUse: 0, science: 0 },
+    env: { tau: TAU_CLEAR, sun: 0, storm: null, spe: null, commDelayMin: 0 },
+    unlocked: chapterDef ? JSON.parse(JSON.stringify(chapterDef.unlocked)) : { modules: [...start.unlocked], features: [...STORY_FEATURES], techs: null },
+    slots: SLOTS.map((s) => ({ id: s.id, gx: s.gx, gz: s.gz, module: null })),
+    colonists: [],
+    expeditions: [],
+    ship: { nextArrivalT: start.shipNextArrivalT || SHIP.intervalSols, manifest: start.shipManifest ? JSON.parse(JSON.stringify(start.shipManifest)) : null, awaitingDecision: false, offer: null, decideBy: null },
+    tech: { unlocked: [...(start.tech || [])] },
+    sheltering: false,
+    events: newEventsState(),
+    timers: { o2Out: 0, waterOut: 0, foodOut: 0, blackout: 0 },
+    story: null,
+    realSun: null,
+    stats: { popPeak: 0, panelsSeen: [], selfSufficientAt: null },
+    over: null,
+    // Core bookkeeping (not part of the UI contract): step remainder, id counters,
+    // which alerts are currently raised, when each module was shed, milestone streak.
+    sim: { acc: 0, nextColonistId: 1, nextExpeditionId: 1, alerts: {}, shedAt: {}, shipsArrived: 0, milestone: { streak: 0, o2: 0, water: 0, food: 0 } },
+  };
+  for (const m of start.modules) {
+    const slot = state.slots.find((s) => s.id === m.slot);
+    const mod = newModule(m.type, m.level, 'ok');
+    mod.dust = m.dust || 0;
+    mod.growth = m.growth || 0;
+    for (let l = 0; l < m.level; l++) {
+      const c = MODULES[m.type].levels[l].cost;
+      mod.spent.parts += c.parts || 0;
+      mod.spent.regolith += c.regolith || 0;
+    }
+    slot.module = mod;
+  }
+  // Apêndice B.4: the starting crew has one of each profession
+  if (chapterDef) {
+    for (const c of start.colonists) state.colonists.push({ ...newColonist(state, c), dose: c.dose });
+    state.events.auto = false;
+    state.events.scheduled = JSON.parse(JSON.stringify(chapterDef.scheduled));
+    state.story = { chapter, stepIdx: 0, complete: false, stepStartedAt: state.t,
+      steps: chapterDef.steps.map(s => ({ id: s.id, done: false })),
+      facts: { cleaned: false, ended: [], expeditions: [], landed: 0, sheltered: [], recalled: [] } };
+  } else for (let i = 0; i < start.colonists; i++) state.colonists.push(newColonist(state, { profession: PROFESSIONS[i % PROFESSIONS.length] }));
+  state.stats.popPeak = state.colonists.length;
+  return state;
+}
+
+/** Fill fields added after version 1 so older saves keep loading. Mutates and returns the state. */
+export function migrateState(state) {
+  if (!state.difficulty) state.difficulty = 'commander';
+  if (state.realSun === undefined) state.realSun = null;
+  if (!state.unlocked.features) state.unlocked.features = [...STORY_FEATURES];
+  if (state.unlocked.techs === undefined) state.unlocked.techs = null;
+  if (!state.events) state.events = newEventsState();
+  if (state.events.auto === undefined) state.events.auto = true;
+  const sh = state.ship;
+  if (sh.offer === undefined) sh.offer = null;
+  if (sh.decideBy === undefined) sh.decideBy = null;
+  if (state.stats.selfSufficientAt === undefined) state.stats.selfSufficientAt = null;
+  const sim = state.sim;
+  if (!sim.nextExpeditionId) sim.nextExpeditionId = 1;
+  if (!sim.milestone) sim.milestone = { streak: 0, o2: 0, water: 0, food: 0 };
+  state.version = STATE_VERSION;
+  return state;
+}
