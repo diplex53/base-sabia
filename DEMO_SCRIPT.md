@@ -1,6 +1,6 @@
 # Demo de 30 segundos — Base Sabiá
 
-Roteiro para gravação e edição pela equipe. Ainda não é um vídeo gravado. Formato baseado nas instruções fornecidas pelo Gabriel; conferir as regras finais no portal antes do envio.
+Roteiro para gravação e edição pela equipe. Ainda não é um vídeo gravado. Formato baseado nas instruções fornecidas pelo líder da equipe; conferir as regras finais no portal antes do envio.
 
 Gravar somente a janela do jogo, sem webcam, narração, notificações, nomes de participantes ou contas pessoais. Os nomes dos colonos são personagens fictícios. Usar legendas em inglês grandes e contrastantes. Não é necessária trilha; silêncio evita créditos e licenças adicionais. Se houver trilha ou imagens externas, registrar a licença em `REFERENCES.md`.
 
@@ -20,6 +20,6 @@ Gravar somente a janela do jogo, sem webcam, narração, notificações, nomes d
 3. Manter o painel de fonte aberto o suficiente para o nome da instituição e a unidade serem legíveis. Se aparecer RadLab, não confundir μGy/h com mSv.
 4. Cortar barras do navegador que contenham perfis ou favoritos. Capturar a janela do jogo, sem outras conversas ou arquivos.
 5. Exportar em MP4, 1920×1080 se disponível, no máximo 30 s. Assistir ao arquivo completo, conferir as legendas e a ausência de dados pessoais.
-6. Após autorização do Gabriel para publicar, hospedar em link público sem login. Conferir o link em aba anônima e também pelo celular. Não enviar a inscrição automaticamente.
+6. Após autorização do líder da equipe para publicar, hospedar em link público sem login. Conferir o link em aba anônima e também pelo celular. Não enviar a inscrição automaticamente.
 
 O vídeo é uma gravação do protótipo. A declaração de IA na página do projeto deve mencionar assistência em código, textos e roteiro; se a equipe adicionar imagem ou vídeo gerado por IA, aplicar a identificação exigida pelas regras do evento.

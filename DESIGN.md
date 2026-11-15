@@ -1,7 +1,7 @@
 # DESIGN — Base Sabiá: Junior Astronaut Mission Trainer
 
 NASA Space Apps Belo Horizonte 2026 · desafio "Build a Junior Astronaut Mission Trainer"
-Status: **rascunho v1, aguardando ok do Gabriel**. Código em inglês, textos do jogo em PT/EN.
+Status: **rascunho v1, aguardando ok do líder da equipe**. Código em inglês, textos do jogo em PT/EN.
 
 ## 1. Conceito em uma frase
 
@@ -438,15 +438,15 @@ Voxel sem engine: cada módulo é uma lista de caixas `[x,y,z,w,h,d,cor]` em dad
 | Escopo da Fase 3 | sistemas orientados a dados; ordem de corte definida no briefing |
 | Dado científico errado diante da banca | cada constante com URL; status C/V/A; equipe de pesquisa fecha as `ASSUMPTION` |
 | GitHub Pages falhar no dia | deploy já no fim da Fase 1, verificado em aba anônima a cada fase |
-| Demo com menor de idade | gravação de tela + legendas; sem rosto, voz ou nome do Gabriel |
+| Demo com menor de idade | gravação de tela + legendas; sem rosto, voz ou nome do líder da equipe |
 | Jogo complexo demais para a faixa do desafio (7–12) | história libera um recurso por vez; HUD com autonomia em sols; pausa automática; teste com crianças (EQ-4) |
 | API do DONKI fora do ar ou bloqueada no dia | catálogo embutido é a fonte do jogo; o "ao vivo" é só um widget, com rótulo honesto |
 
-## 16. Pendências para o Gabriel
+## 16. Pendências para o líder da equipe
 
 Respondidas em 14/11, ~13h:
 
-1. **Faixa etária: 7 a 12 anos**, como o desafio (decisão do Gabriel, substitui 10–14). Consequências:
+1. **Faixa etária: 7 a 12 anos**, como o desafio (decisão do líder da equipe, substitui 10–14). Consequências:
    - Textos: frases de até ~12 palavras, uma ideia por frase, toda sigla explicada na hora (sol, mSv, kWh). Painel científico: 2 frases + o número real.
    - Dois níveis: **Cadete** (padrão; mais estoque inicial, tolerâncias maiores, sem falha de equipamento, pausa automática ligada) e **Comandante** (valores normais). Só mudam valores de jogo; as taxas físicas reais são as mesmas.
    - **Ajuda da ARA**: botão "O que faço agora?" que lê o estado e aponta a ação mais urgente (regra simples sobre a autonomia de cada recurso).
@@ -734,7 +734,7 @@ Tripulação fixa: Lia Moreira (`engineer`), Kenji Tanaka (`medic`), Amara Okafo
 - Fim: `story.complete` → cenas de `outro`, pontuação, "próximo capítulo". `game.over` → "tentar de novo".
 - Dono dos textos: agente da interface (`src/i18n/**`); a equipe (EQ-2) revisa depois.
 
-## Apêndice D — Aderência ao desafio (aprovado pelo Gabriel em 14/11, ~15h; vinculante)
+## Apêndice D — Aderência ao desafio (aprovado pelo líder da equipe em 14/11, ~15h; vinculante)
 
 Motivo: a página do desafio pede decisões sobre atraso de comunicação e destaca ligar a blindagem ao clima espacial real.
 

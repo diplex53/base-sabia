@@ -1,6 +1,6 @@
 # TASKS — Base Sabiá
 
-Horários em Brasília. Responsáveis: **ARQ** (arquiteto/orquestrador), **S** (subagente sonnet), **O** (subagente opus), **GAB** (Gabriel), **EQ-1..5** (equipe não-programadora, ver seção final).
+Horários em Brasília. Responsáveis: **ARQ** (arquiteto/orquestrador), **S** (subagente sonnet), **O** (subagente opus), **GAB** (líder da equipe), **EQ-1..5** (equipe não-programadora, ver seção final).
 Regra: cada subagente é dono de arquivos diferentes. Dois agentes nunca editam o mesmo arquivo ao mesmo tempo.
 
 ## Checkpoints
@@ -19,7 +19,7 @@ Regra: cada subagente é dono de arquivos diferentes. Dois agentes nunca editam 
 
 | ID | Tarefa | Resp. | Depende | Alvo |
 |---|---|---|---|---|
-| 0.1 | `DESIGN.md` + ok do Gabriel | ARQ, GAB | — | 12h45 |
+| 0.1 | `DESIGN.md` + ok do líder da equipe | ARQ, GAB | — | 12h45 |
 | 0.2 | Validar constantes e a aba Resources do desafio | S ×3 (rodando) | — | 12h45 |
 | 0.3 | Fechar a tabela de constantes com o resultado de 0.2 | ARQ | 0.2 | 13h00 |
 | 0.4 | Git + repositório no GitHub (`diplex53`) + Pages ligado | ARQ, GAB (decide público/privado) | 0.1 | 13h00 |
@@ -97,7 +97,7 @@ Ordem de corte se atrasar: polimento visual → capítulo 3 → expedições vir
 
 ## Equipe não-programadora
 
-Distribuam os cinco papéis entre vocês. Entregas em um documento compartilhado; o Gabriel repassa.
+Distribuam os cinco papéis entre vocês. Entregas em um documento compartilhado; o líder da equipe repassa.
 
 **EQ-1 — Pesquisa e validade científica**
 - Sáb até 17h: para cada item marcado `ASSUMPTION` na seção 13 do `DESIGN.md`, achar uma fonte NASA ou artigo que dê o número real, ou confirmar que não existe. Entregar: constante, valor, URL, trecho.
@@ -127,7 +127,7 @@ Distribuam os cinco papéis entre vocês. Entregas em um documento compartilhado
 - Dom: gravação, legendas, upload e ensaio.
 - Restrição: toda a equipe é menor de idade, então a demo não tem rosto, voz nem nome de ninguém. Formato: gravação de tela do jogo com legendas em inglês (e trilha livre de direitos, com crédito), ou slides. Nos créditos da demo, só o nome da equipe.
 
-## Pendências que dependem do Gabriel
+## Pendências que dependem do líder da equipe
 
 1. ~~Ok no `DESIGN.md`~~ dado às ~13h.
 2. ~~Faixa etária~~: 7 a 12 anos, como o desafio.
@@ -137,6 +137,6 @@ Distribuam os cinco papéis entre vocês. Entregas em um documento compartilhado
 ## Regras do evento conferidas no site (14/11)
 
 - Demo: vídeo de até 30 s **ou** até 7 slides, em link público sem login. Inglês obrigatório na página e nos slides; vídeo pode ser falado em português com legendas em inglês.
-- Uso de IA: declarar como foi usada; imagens e vídeos gerados por IA levam marca d'água visível; código e dados gerados por IA são reconhecidos no texto. A IA não pode ter criado a ideia da solução (a ideia e as decisões são do Gabriel e da equipe).
+- Uso de IA: declarar como foi usada; imagens e vídeos gerados por IA levam marca d'água visível; código e dados gerados por IA são reconhecidos no texto. A IA não pode ter criado a ideia da solução (a ideia e as decisões são do líder da equipe e da equipe).
 - Conteúdo gerado por IA não pode conter logo, bandeira ou identificador de missão da NASA.
 - Para prêmio global: usar pelo menos um dado ou recurso da NASA e listar todos na submissão.

@@ -5,7 +5,7 @@ Data: 14/11/2026, horário de Brasília. Registro provisório da continuação n
 ## Ponto encontrado
 
 - Pasta do projeto: `C:\Users\gabri\Desktop\GERAL\nasa`.
-- Plano existente: `DESIGN.md`, `TASKS.md`; autorização para implementar já registrada no histórico do Gabriel.
+- Plano existente: `DESIGN.md`, `TASKS.md`; autorização para implementar já registrada no histórico do líder da equipe.
 - O núcleo original passou em **36/36 testes**, executados pelo agente principal.
 - A interface e o renderer 3D estavam presentes; o núcleo ainda rejeitava o modo história.
 - O histórico fornecido confirmou que os quatro ajustes do Apêndice D já estavam aprovados: Sol real, conjunção, tela Dados da NASA, painéis RadLab/OSDR.
@@ -21,7 +21,7 @@ Data: 14/11/2026, horário de Brasília. Registro provisório da continuação n
 
 - Repositório público/GitHub Pages ainda não autorizado no histórico. Nenhuma publicação foi feita por esta frente.
 - Não existe aqui um plano separado de áudio; a demo acordada é sem voz, rosto ou nomes dos menores. O roteiro usa gravação de tela e legendas.
-- Revisão com crianças/equipe, gravação, publicação da demo e inscrição permanecem com Gabriel/equipe.
+- Revisão com crianças/equipe, gravação, publicação da demo e inscrição permanecem com líder da equipe/equipe.
 - As pendências de fonte herdadas estão discriminadas em `REFERENCES.md`. O terreno não foi derivado de Mars Trek.
 - O site do desafio não pôde ser reaberto pela ferramenta de pesquisa nesta continuação; suas regras não foram declaradas como novamente verificadas.
 
