@@ -316,6 +316,10 @@ export function createAutoplay(h) {
   let ships = 0;
   let ui = null;
   let presenter = true;
+  let hold = 10;   // presenter mode: seconds each stop stays before going on by itself (0 = wait for the key)
+  let waitT = 0;   // real seconds spent on the current stop
+  let lastWall = 0; // wall clock of the previous update (the hold time must not depend on the frame rate)
+  const wallNow = () => (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now());
   let demoModal = false; // presenter mode: a panel/modal the demo opened is waiting for the presenter
 
   function buildUi() {
@@ -357,7 +361,8 @@ export function createAutoplay(h) {
     if (cur || wait) {
       ui.capText.textContent = cur ? t('demo.b.' + cur.key) : '';
       ui.capText.hidden = !cur;
-      ui.cont.textContent = t('demo.continue');
+      const left = hold > 0 && wait ? Math.max(0, Math.ceil((cur && cur.key === 'dome' ? Math.max(hold, 8) : hold) - waitT)) : null;
+      ui.cont.textContent = t('demo.continue') + (left != null ? ' · ' + left : '');
       ui.cont.hidden = !wait;
       ui.caption.hidden = false;
     } else { ui.caption.hidden = true; ui.cont.hidden = true; }
@@ -384,6 +389,7 @@ export function createAutoplay(h) {
   /** Presenter continues: close what the demo opened, end the beat, resume fast play. No-op when nothing waits. */
   function advance() {
     if (!waiting()) return false;
+    waitT = 0;
     if (h.modalsOpen()) { try { h.closeModals(); } catch (e) { /* ignore */ } }
     demoModal = false; modalT = 0; modalLimit = STRAY_MODAL_SECONDS;
     if (cur) endBeat(); else paint();
@@ -408,6 +414,7 @@ export function createAutoplay(h) {
   function startBeat(key) {
     cur = { key, until: presenter ? Infinity : tReal + (BEAT_SECONDS[key] || 6), slow: key !== 'intro' };
     log.push({ key, at: Math.round(tReal), sol: Math.floor(h.getGame().state.t) + 1 });
+    if (key === 'dome' && h.showVictory) { try { h.showVictory(); } catch (e) { /* ignore */ } }
     if (key === 'craft' && h.openCraft && !h.modalsOpen()) { try { h.openCraft(); modalLimit = TECH_SECONDS; modalT = 0; demoModal = presenter; } catch (e) { /* ignore */ } }
     if (key === 'tech' && h.openTech && !h.modalsOpen()) { try { h.openTech(); modalLimit = TECH_SECONDS; modalT = 0; demoModal = presenter; } catch (e) { /* ignore */ } }
     if (key === 'city' && hasDom) {
@@ -417,6 +424,7 @@ export function createAutoplay(h) {
     paint();
   }
   function endBeat() {
+    if (cur && cur.key === 'dome' && h.hideVictory) { try { h.hideVictory(); } catch (e) { /* ignore */ } }
     if (cur && cur.key === 'city' && hasDom) { const cp = document.getElementById('city-panel'); if (cp) cp.classList.remove('demo-focus'); }
     const k = cur && cur.key;
     cur = null;
@@ -436,10 +444,22 @@ export function createAutoplay(h) {
   function update(dtReal) {
     if (!active || finished) return;
     const dt = Math.max(0, Math.min(0.1, dtReal || 0));
+    const wall = wallNow();
+    const wallDt = lastWall ? Math.max(0, Math.min(1, (wall - lastWall) / 1000)) : 0;
+    lastWall = wall;
     if (presenter) {
       if (demoModal && !h.modalsOpen()) { demoModal = false; paint(); } // presenter closed the panel by hand
       if (!cur && queue.length) startBeat(queue.shift());
-      if (cur || demoModal) return; // frozen until the presenter continues (no ticks, no bot, no clock)
+      if (cur || demoModal) { // frozen (no ticks, no bot, no clock) until the key or until the hold time runs out
+        if (hold > 0) {
+          const before = Math.ceil(hold - waitT);
+          waitT += wallDt;
+          if (waitT >= (cur && cur.key === 'dome' ? Math.max(hold, 8) : hold)) { advance(); return; } // the victory scene stays at least 8 s
+          if (Math.ceil(hold - waitT) !== before) paint();
+        }
+        return;
+      }
+      waitT = 0;
     }
     tReal += dt;
     if (h.modalsOpen()) {
@@ -505,6 +525,8 @@ export function createAutoplay(h) {
   function start(opts = {}) {
     buildUi();
     presenter = opts.mode !== 'auto';
+    hold = Number.isFinite(opts.hold) && opts.hold >= 0 ? opts.hold : 10;
+    waitT = 0;
     demoModal = false;
     if (hasDom) { window.removeEventListener('keydown', onKey, true); if (presenter) window.addEventListener('keydown', onKey, true); }
     active = true; finished = false;

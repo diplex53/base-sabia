@@ -46,6 +46,8 @@ const ACTIONS = {
   recallExpedition: actRecallExpedition,
   shipDecision: actShipDecision,
   craft: actCraft,
+  // player choice: burn stored methane for power (default) or keep it for crafting
+  setMethaneBurn: (state, { on }) => { state.methaneBurn = !!on; return null; },
 };
 
 /** Science (DESIGN 5.6): SCIENCE_PER_COLONIST_SOL per active colonist per sol (events and expeditions add theirs). */

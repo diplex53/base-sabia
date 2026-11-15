@@ -61,12 +61,15 @@ export const healthLow = (state) => (state.health ?? 100) < HEALTH.lowAt;
 
 /**
  * Sabatier mode (E.2): 'burn' at night or with the battery below SABATIER_BURN_BELOW (burns stored methane),
- * 'make' otherwise (uses power and water, makes methane), 'off' when not operating.
+ * 'make' otherwise (uses power and water, makes methane), 'off' when not operating,
+ * 'hold' instead of 'burn' when the player turned burning off (state.methaneBurn === false).
  */
 export function sabatierMode(state, mod) {
   if (!isBuilt(mod) || !mod.enabled || isDown(mod)) return 'off';
   const cap = batteryCapacity(state);
-  return state.env.sun <= 0 || state.resources.energy < SABATIER_BURN_BELOW * cap ? 'burn' : 'make';
+  const wouldBurn = state.env.sun <= 0 || state.resources.energy < SABATIER_BURN_BELOW * cap;
+  if (!wouldBurn) return 'make';
+  return state.methaneBurn === false ? 'hold' : 'burn'; // 'hold': the player keeps the methane (for crafting); no power, no production
 }
 
 /**

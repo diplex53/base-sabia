@@ -1,7 +1,7 @@
 // Modo apresentação (src/demo/autoplay.js)
 export default {
   'demo.start': 'Iniciar apresentação',
-  'demo.startNote': 'O jogo se joga sozinho e para a cada novidade. Aperte Espaço para continuar.',
+  'demo.startNote': 'O jogo se joga sozinho, para a cada novidade pelo tempo de explicar e segue. Espaço adianta.',
   'demo.continue': 'Continuar ▶ (Espaço)',
   'demo.b.devil': 'Redemoinho de poeira: em Marte eles às vezes limpam os painéis solares, como aconteceu com os rovers Spirit e Opportunity.',
   'demo.b.quake': 'Martemoto! O módulo InSight da NASA registrou mais de 1.300 tremores em Marte.',

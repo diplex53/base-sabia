@@ -3,6 +3,7 @@ import { TIME, DEFAULT_ECONOMY } from './data/balance.js';
 import { t, onLangChange } from './i18n/i18n.js';
 import { applyStatic } from './ui/util.js';
 import { toast } from './ui/toast.js';
+import { showVictory, hideVictory } from './ui/victory.js';
 import { createHud } from './ui/hud.js';
 import { createSlotPanel } from './ui/slotPanel.js';
 import { createColonistPanel } from './ui/colonists.js';
@@ -55,6 +56,13 @@ function setLaunchScreen(on) {
   if (hudRoot) hudRoot.inert = on;
 }
 
+/** Dome finished: frame the base, freeze the game and play the victory scene. */
+function domeVictory(onContinue) {
+  try { if (view && view.resetCamera) view.resetCamera(); } catch (e) { /* ignore */ }
+  const st = game.state;
+  if (onContinue) setSpeed(0);
+  showVictory({ sol: Math.floor(st.t) + 1, colonists: st.colonists.length }, onContinue);
+}
 function setSpeed(s) {
   if (![0, 1, 2, 4].includes(s)) return;
   speed = s;
@@ -132,13 +140,20 @@ demo = createAutoplay({
   closeModals: () => modals.closeAll(),
   openTech: () => modals.showTech(),
   openCraft: () => modals.showCraft(),
+  showVictory: () => domeVictory(null),
+  hideVictory,
   showScience: (id) => modals.showScience(id, { spe: lastSpe || (game.state.env && game.state.env.spe) }),
   onExit: () => exitDemo(),
   onReplay: () => startDemo(demo.mode),
   onPlay: () => { exitDemo({ toStart: false }); startColony('cadet'); },
 });
+// Presentation: seconds each stop stays on screen before going on by itself. ?demo=1&t=15 changes it; ?demo=manual waits for the key.
+const demoQuery = new URLSearchParams(location.search);
+const demoT = Number(demoQuery.get('t'));
+const demoHold = demoQuery.get('demo') === 'manual' ? 0 : (demoQuery.get('t') !== null && Number.isFinite(demoT) && demoT >= 0 ? Math.min(120, demoT) : 10);
 function startDemo(mode = 'presenter') {
   if (demo.active) demo.stop();
+  hideVictory();
   modals.closeAll();
   game = createGame({ mode: 'colony', seed: DEMO_SEED, difficulty: DEMO_DIFFICULTY });
   selected = null;
@@ -150,10 +165,10 @@ function startDemo(mode = 'presenter') {
   speed = 1;
   started = true;
   setLaunchScreen(false);
-  demo.start({ mode });
+  demo.start({ mode, hold: demoHold });
 }
 function exitDemo({ toStart = true } = {}) {
-  demo.stop();
+  demo.stop(); hideVictory();
   modals.closeAll();
   started = false;
   speed = 0;
@@ -366,7 +381,7 @@ function handleEvents(events, state) {
         break;
       case 'milestone':
         if (ev.id === 'selfSufficient') modals.showMilestone();
-        else if (ev.id === 'dome') modals.showMilestone('dome');
+        else if (ev.id === 'dome') domeVictory(() => { setSpeed(1); modals.showMilestone('dome'); });
         break;
       case 'alert':
         if (ev.level === 'danger') pausing();
@@ -497,6 +512,6 @@ applyStatic();
 loadSunToday();
 onLangChange(() => { applyStatic(); document.title = t('ui.title'); });
 const demoParam = new URLSearchParams(location.search).get('demo'); // 1 = presenter (pauses at each beat), auto = timed show
-if (demoParam === '1' || demoParam === 'auto') startDemo(demoParam === 'auto' ? 'auto' : 'presenter'); else modals.showStart();
+if (demoParam === '1' || demoParam === 'manual' || demoParam === 'auto') startDemo(demoParam === 'auto' ? 'auto' : 'presenter'); else modals.showStart();
 mountView().catch((e) => console.error(e));
 requestAnimationFrame(frame);

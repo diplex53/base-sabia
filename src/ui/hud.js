@@ -71,6 +71,10 @@ export function createHud(ctx) {
   subs.methane = { label: el('span', { class: 'sub-label lbl-wide' }), val: el('span', { class: 'num' }) };
   subs.methane.root = el('span', { class: 'chip chip-res', hidden: true }, icon('energy'), subs.methane.label, subs.methane.val);
   subWrap.append(subs.methane.root);
+  // choose whether the Sabatier reactors burn stored methane for power
+  subs.methBurn = el('button', { type: 'button', class: 'chip chip-btn chip-res meth-burn', hidden: true,
+    onclick: () => ctx.act({ type: 'setMethaneBurn', on: ctx.getState().methaneBurn === false }) });
+  subWrap.append(subs.methBurn);
   subs.dome = { val: el('span', { class: 'num' }) };
   subs.dome.root = el('button', { type: 'button', class: 'chip chip-btn chip-res', hidden: true, onclick: () => openCity() }, icon('shelter'), subs.dome.val);
   subWrap.append(subs.dome.root);
@@ -239,6 +243,14 @@ export function createHud(ctx) {
       setText(subs.methane.label, t('res.methane'));
       setText(subs.methane.val, fmt(state.resources.methane, 0));
       setAttr(subs.methane.root, 'title', t('res.methaneShort'));
+    }
+    const hasSab = hasMeth && state.slots.some((s) => s.module && s.module.type === 'sabatier');
+    subs.methBurn.hidden = !hasSab;
+    if (hasSab) {
+      const burnOn = state.methaneBurn !== false;
+      setText(subs.methBurn, t(burnOn ? 'ui.methBurn.on' : 'ui.methBurn.off'));
+      setAttr(subs.methBurn, 'title', t('ui.methBurn.title'));
+      setAttr(subs.methBurn, 'aria-pressed', burnOn ? 'true' : 'false');
     }
     const dm = domeInfo(state);
     const showDome = !!dm && (dm.kind !== 'none');

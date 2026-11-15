@@ -76,6 +76,7 @@ export function createInitialState({ mode = 'colony', chapter = 0, seed, difficu
     realSun: null,
     stats: { popPeak: 0, panelsSeen: [], selfSufficientAt: null, domeAt: null },
     health: 100, // Apêndice E.3
+    methaneBurn: true, // false = keep the methane instead of burning it for power
     inv: {}, // crafting: ores, items and kits (missing key = 0)
     over: null,
     // Core bookkeeping (not part of the UI contract): step remainder, id counters,
@@ -143,6 +144,7 @@ export function migrateState(state) {
   migrateSlots(state);
   if (!state.difficulty) state.difficulty = 'commander';
   if (state.resources.methane === undefined) state.resources.methane = 0;
+  if (state.methaneBurn === undefined) state.methaneBurn = true;
   if (state.health === undefined) state.health = 100;
   if (!state.inv || typeof state.inv !== 'object') state.inv = {};
   if (!state.economy) state.economy = 'parts';

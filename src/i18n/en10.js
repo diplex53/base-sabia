@@ -1,7 +1,7 @@
 // Presentation mode (src/demo/autoplay.js)
 export default {
   'demo.start': 'Start presentation',
-  'demo.startNote': 'The game plays itself and stops at each new thing. Press Space to continue.',
+  'demo.startNote': 'The game plays itself, stops at each new thing long enough to explain it, then goes on. Space skips ahead.',
   'demo.continue': 'Continue ▶ (Space)',
   'demo.b.devil': 'Dust devil: on Mars they sometimes clean the solar panels, as happened to the Spirit and Opportunity rovers.',
   'demo.b.quake': 'Marsquake! NASA\'s InSight lander recorded more than 1,300 quakes on Mars.',
