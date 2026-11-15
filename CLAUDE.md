@@ -43,6 +43,12 @@ Publicado em https://diplex53.github.io/base-sabia/ (repositório público `dipl
   - Etiquetas de retorno: `estavel-domo` (domo + apresentação, sem economia de crafting), `estavel-crafting1`, `estavel-mapa`.
   - 12h30: na apresentação o HUD fica reduzido (só a barra de recursos; painéis laterais e barra de baixo escondidos por CSS em `css/demo.css`, classe `body.is-demo`) e a legenda virou uma faixa baixa.
   - Cosmético conhecido em janela estreita: a legenda da apresentação cobre parte do painel aberto atrás dela; o botão "Ocultar domo" pode ficar cortado na barra de cima.
+- **Estado às 12h55 (relógio do PC):** NO AR na `main`, além do bloco das 12h25:
+  - Apresentação: HUD reduzido (`css/demo.css`, `body.is-demo`); cada parada fica 10 s e segue sozinha (Espaço adianta). `?demo=1&t=20` muda os segundos; `?demo=manual` só avança na tecla; `?demo=auto` é a versão cronometrada antiga.
+  - Vitória do domo: cena com faixas de cinema, "MISSÃO CUMPRIDA" e confete (`src/ui/victory.js`, `css/victory.css`), no jogo (pausa e botão "Continuar jogando") e na apresentação (fica no mínimo 8 s). No jogo normal só foi conferida chamando a cena pelo console, não com um domo construído à mão.
+  - Chave "Queimar metano: sim/não" no HUD (aparece quando existe Reator Sabatier): ação `setMethaneBurn`, `state.methaneBurn`; desligada, o Sabatier fica em modo `hold` à noite e guarda o metano. Testes verdes; o botão em si não foi clicado no navegador (precisa de um Sabatier construído).
+  - Tela inicial: `css/launch.css` põe Continuar / Novo jogo / Modo História / Iniciar apresentação no topo, maiores; dificuldade e extras abaixo.
+  - Etiqueta de retorno antes deste lote: `estavel-1230`.
 - Falta, sem código: revisar `PROJECT_PAGE.md`, `REFERENCES.md` e `DEMO_SCRIPT.md` (foram escritos fora desta sessão e ainda não cobrem a expansão), gravar a demo, enviar.
 - Pendências conhecidas: texto de `err.notStaffable` não existe nos arquivos de idioma; domo fácil demais no Cadete (bot termina entre os sols 109 e 170); cerca de 30 fps no 3D com o mapa maior; capítulos 2 e 3 da história testados só por bot.
 - Fora do escopo (dito à equipe como "futuro"): substituir peças por itens (economia de crafting), mapa 2500x, barras de qualidade de vida com taxas inventadas, casas e prédios.

@@ -1,0 +1,42 @@
+/* Title screen polish: the three ways to start come first, bigger and clearer; options and extras go below. */
+.launch-modal { display: flex; flex-direction: column; width: min(560px, 48vw); }
+.launch-modal > * { order: 6; }
+.launch-modal > .launch-brand { order: 0; }
+.launch-modal > .launch-resume { order: 1; }
+.launch-modal > .launch-actions { order: 2; }
+.launch-modal > .launch-demo { order: 3; }
+.launch-modal > .launch-mode-note { order: 4; }
+.launch-modal > .launch-setup { order: 5; }
+.launch-modal > .launch-secondary { order: 7; }
+.launch-modal > .launch-footer { order: 8; }
+
+.launch-title { text-shadow: 0 0 40px rgba(255, 138, 61, 0.28); }
+.launch-intro { max-width: 460px; font-size: 17px; line-height: 1.6; color: #d3e2ea; }
+.launch-ara { display: none; }
+.launch-meta { margin: 14px 0 20px; font-size: 11px; }
+
+.launch-actions { gap: 10px; margin: 0 0 10px; }
+.launch-actions .btn { min-height: 54px; padding: 14px 20px; font-size: 16px; font-weight: 650; border-radius: 12px; }
+.launch-actions .btn:not(:disabled):hover { transform: translateX(3px); }
+.launch-actions .btn { transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease; }
+
+.launch-demo { margin: 0 0 12px; padding: 12px 14px; border: 1px solid rgba(255, 138, 61, 0.45); border-radius: 12px; background: rgba(255, 138, 61, 0.07); }
+.launch-demo .btn { width: 100%; min-height: 46px; font-size: 15px; font-weight: 650; text-align: left; display: flex; align-items: center; justify-content: space-between; }
+.launch-demo .btn::after { content: '\25B6'; font-size: 13px; color: var(--accent); }
+.launch-demo .small { margin: 8px 0 0; font-size: 12px; line-height: 1.5; }
+
+.launch-mode-note { font-size: 12.5px; margin: 0 0 6px; }
+.launch-setup { padding: 14px 0; }
+.launch-label { font-size: 11px; }
+.launch-setup .diff-btn { min-height: 58px; }
+.launch-secondary .btn, .launch-secondary .link-btn { font-size: 12.5px; }
+.launch-footer { font-size: 11px; }
+
+@media (max-width: 819px) {
+  .launch-modal { width: min(480px, 100%); }
+  .launch-intro { font-size: 15px; }
+  .launch-actions .btn { min-height: 50px; font-size: 15px; }
+}
+@media (prefers-reduced-motion: reduce) { .launch-actions .btn { transition: none; } .launch-actions .btn:not(:disabled):hover { transform: none; } }
+.launch-resume { margin: 0 0 10px; }
+.launch-resume .btn { width: 100%; min-height: 54px; padding: 14px 20px; font-size: 16px; font-weight: 650; border-radius: 12px; justify-content: space-between; }

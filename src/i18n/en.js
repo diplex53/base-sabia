@@ -17,7 +17,7 @@ export default {
   'ui.modeStory': 'Story Mode',
   'ui.soon': 'coming soon',
   'ui.aboutData': 'The game numbers come from NASA sources. Each panel shows its source. This is an educational game with no official link to NASA.',
-  'ui.keysHint': 'Space pauses the game. Keys 1, 2 and 3 change the speed.',
+  'ui.keysHint': 'Space pauses. 1, 2 and 3 change the speed. V opens the inventory, P crafting, B recenters the camera.',
   'ui.language': 'Language',
   'ui.hud': 'Base control panel',
   'ui.view': 'Base map',

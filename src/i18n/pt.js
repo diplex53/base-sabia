@@ -17,7 +17,7 @@ export default {
   'ui.modeStory': 'Modo História',
   'ui.soon': 'em breve',
   'ui.aboutData': 'Os números do jogo vêm de fontes da NASA. Cada painel mostra a fonte. Este é um jogo educativo, sem ligação oficial com a NASA.',
-  'ui.keysHint': 'Espaço pausa o jogo. As teclas 1, 2 e 3 mudam a velocidade.',
+  'ui.keysHint': 'Espaço pausa. 1, 2 e 3 mudam a velocidade. V abre o inventário, P a fabricação, B volta a câmera à base.',
   'ui.language': 'Idioma',
   'ui.hud': 'Painel de controle da base',
   'ui.view': 'Mapa da base',
