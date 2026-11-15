@@ -223,7 +223,7 @@ export default {
   'over.blackout': 'The habitat lost power. The crew went back to Earth.',
   'over.dose': 'Someone reached the 600 mSv radiation limit. The mission was aborted and the crew returned to Earth.',
   'panel.over.dose.title': 'The 600 mSv limit',
-  'panel.over.dose.body': 'NASA limits an astronaut's dose over a whole career to 600 mSv. Someone who reaches it must stop flying. Sheltering the crew at the right time keeps the dose low.',
+  'panel.over.dose.body': 'NASA limits the dose of an astronaut over a whole career to 600 mSv. Someone who reaches it must stop flying. Sheltering the crew at the right time keeps the dose low.',
   'over.noCrew': 'No colonist is left on the base.',
 
   // science panels
