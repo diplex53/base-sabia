@@ -269,7 +269,7 @@ function staff(game) {
 // ---------------------------------------------------------------------------------------------
 // Script
 
-const BEAT_SECONDS = { intro: 7, moxie: 7, water: 6, dust: 7, spe: 7, tech: 6, ship: 7, expedition: 6, city: 6, dome: 7, lost: 6 };
+const BEAT_SECONDS = { intro: 7, moxie: 7, water: 6, dust: 7, spe: 7, tech: 6, ship: 7, expedition: 6, city: 6, grow: 6, reactor: 6, domeTech: 6, dome: 7, lost: 6 };
 
 /**
  * h = { getGame, modalsOpen, closeModals, openTech, showScience(id), onExit, onReplay, onPlay }
@@ -282,6 +282,7 @@ export function createAutoplay(h) {
   let queue = [];
   let seen = new Set();
   let log = [];
+  let ships = 0;
   let ui = null;
 
   function buildUi() {
@@ -399,12 +400,13 @@ export function createAutoplay(h) {
       if (ev.type === 'build.done' && ev.level === 1) {
         if (ev.moduleType === 'moxie') push('moxie');
         else if (ev.moduleType === 'extractor' || ev.moduleType === 'greenhouse') push('water');
+        else if (ev.moduleType === 'reactor') push('reactor');
         else if (ev.moduleType === 'dome') push('dome');
       } else if (ev.type === 'event.start') {
         if (ev.kind === 'dustRegional' || ev.kind === 'dustGlobal') push('dust');
         else if (ev.kind === 'spe') push('spe');
-      } else if (ev.type === 'tech.unlocked') push('tech');
-      else if (ev.type === 'ship.arrived' || ev.type === 'ship.landed') push('ship');
+      } else if (ev.type === 'tech.unlocked') push(ev.techId === 'domeEngineering' ? 'domeTech' : 'tech');
+      else if (ev.type === 'ship.arrived') { ships++; push('ship'); if (ships >= 3) push('grow'); }
       else if (ev.type === 'expedition.done') push('expedition');
       else if (ev.type === 'milestone' && ev.id === 'dome') push('dome');
       else if (ev.type === 'game.over') push('lost');
@@ -415,6 +417,7 @@ export function createAutoplay(h) {
   function onScience(id) {
     if (!active || finished || !SHOW_PANELS.has(id) || seen.has('panel.' + id)) return;
     seen.add('panel.' + id);
+    if (id === 'moxieEnergy') push('moxie');
     if (h.modalsOpen()) return;
     try { h.showScience(id); modalLimit = PANEL_SECONDS; modalT = 0; } catch (e) { /* ignore */ }
     log.push({ key: 'panel.' + id, at: Math.round(tReal), sol: Math.floor(h.getGame().state.t) + 1 });
@@ -427,7 +430,9 @@ export function createAutoplay(h) {
     cur = null; queue = []; seen = new Set(); log = [];
     if (hasDom) document.body.classList.add('is-demo');
     if (ui) { ui.end.hidden = true; ui.end.replaceChildren(); ui.badge.hidden = false; }
+    ships = 0;
     push('intro');
+    push('moxie');
     paint();
   }
   function stop() {
