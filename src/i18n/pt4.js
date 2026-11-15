@@ -2,7 +2,7 @@
 export default {
   // menu e fluxo
   'story.menuTitle': 'Modo História',
-  'story.menuIntro': 'Missão Sabiá: quatro pessoas, uma base e o planeta Marte. Escolha um capítulo.',
+  'story.menuIntro': 'Protocol: Ares: quatro pessoas, uma base e o planeta Marte. Escolha um capítulo.',
   'story.chapterN': 'Capítulo {n}',
   'story.locked': 'Termine o capítulo anterior para abrir.',
   'story.done': 'Concluído',

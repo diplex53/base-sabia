@@ -1,4 +1,4 @@
-# Uso de IA no projeto Base Sabiá / AI use in Base Sabiá
+# Uso de IA no projeto Protocol: Ares / AI use in Protocol: Ares
 
 ## Summary (English)
 

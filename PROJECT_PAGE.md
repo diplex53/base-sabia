@@ -1,10 +1,10 @@
-# Base Sabiá — Junior Astronaut Mission Trainer
+# Protocol: Ares — Junior Astronaut Mission Trainer
 
 Submission draft. Replace the two link placeholders after an authorized public deployment, and confirm every implemented feature and event requirement before submitting. Do not publish placeholder links.
 
 ## Summary
 
-How do you keep a Mars base alive when sunlight fades and a solar storm is approaching? Base Sabiá lets young learners make those decisions in a browser. They build a voxel colony, balance energy, oxygen, water and food, and protect their crew from accumulated radiation. Short science cards connect each challenge to a real mission, measurement or research source.
+How do you keep a Mars base alive when sunlight fades and a solar storm is approaching? Protocol: Ares lets young learners make those decisions in a browser. They build a voxel colony, balance energy, oxygen, water and food, and protect their crew from accumulated radiation. Short science cards connect each challenge to a real mission, measurement or research source.
 
 **Project link:** pending public deployment.
 

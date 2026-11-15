@@ -1,4 +1,4 @@
-# Demo de 30 segundos — Base Sabiá
+# Demo de 30 segundos — Protocol: Ares
 
 Roteiro para gravação e edição pela equipe. Ainda não é um vídeo gravado. Formato baseado nas instruções fornecidas pelo líder da equipe; conferir as regras finais no portal antes do envio.
 
@@ -11,7 +11,7 @@ Gravar somente a janela do jogo, sem webcam, narração, notificações, nomes d
 | 9–14 s | Tempestade de poeira já preparada; mostrar energia caindo e pausar | **Real missions inspire every challenge.** |
 | 14–19 s | Aviso solar com registro DONKI; clicar em Abrigar todos | **Protect the crew. Every decision has a cost.** |
 | 19–25 s | Abrir painel científico com fonte legível ou tela Dados da NASA | **Learn why it happened. Explore the evidence.** |
-| 25–30 s | Base e título Base Sabiá; fechar com convite | **Play in Portuguese or English. Learn by trying again.** |
+| 25–30 s | Base e título Protocol: Ares; fechar com convite | **Play in Portuguese or English. Learn by trying again.** |
 
 ## Preparação
 

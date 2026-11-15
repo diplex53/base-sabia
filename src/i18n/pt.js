@@ -1,3 +1,4 @@
+import p11 from './pt11.js';
 import p10 from './pt10.js';
 import p9 from './pt9.js';
 import p8 from './pt8.js';
@@ -8,7 +9,7 @@ import p4 from './pt4.js';
 import p3 from './pt3.js';
 export default {
   // geral
-  'ui.title': 'Base Sabiá',
+  'ui.title': 'Protocol: Ares',
   'ui.pitch': 'Cuide de uma base em Marte. Cada número vem de medidas reais da NASA. Cada erro ensina ciência.',
   'ui.modeColony': 'Modo Colônia',
   'ui.modeStory': 'Modo História',
@@ -262,4 +263,5 @@ export default {
   ...p8,
   ...p9,
   ...p10,
+  ...p11,
 };

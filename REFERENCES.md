@@ -1,4 +1,4 @@
-# Base Sabiá — sources, model limits and credits
+# Protocol: Ares — sources, model limits and credits
 
 Research update: 14 November 2026. The sections marked “checked in this session” were opened during this continuation. The remaining inventory records sources already used in the project; it does not imply that every value was independently revalidated today. Exact equations and source-status comments are in `src/data/constants.js`; costs and pacing are in `src/data/balance.js`.
 

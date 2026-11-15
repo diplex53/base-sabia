@@ -1,3 +1,4 @@
+import e11 from './en11.js';
 import e10 from './en10.js';
 import e9 from './en9.js';
 import e8 from './en8.js';
@@ -8,7 +9,7 @@ import e4 from './en4.js';
 import e3 from './en3.js';
 export default {
   // general
-  'ui.title': 'Base Sabiá',
+  'ui.title': 'Protocol: Ares',
   'ui.pitch': 'Run a base on Mars. Every number comes from real NASA measurements. Every mistake teaches science.',
   'ui.modeColony': 'Colony Mode',
   'ui.modeStory': 'Story Mode',
@@ -262,4 +263,5 @@ export default {
   ...e8,
   ...e9,
   ...e10,
+  ...e11,
 };

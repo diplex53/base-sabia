@@ -18,7 +18,7 @@ export default {
   'demo.b.city': 'O painel da Cidade mostra a colônia virando uma cidade: população, conforto e o progresso do domo.',
   'demo.b.dome': 'Meta final: o domo está pronto. A Base Sabiá virou uma cidade em Marte.',
   'demo.b.lost': 'A missão foi abortada. Em Marte, cada erro ensina um pouco de ciência.',
-  'demo.end.title': 'Base Sabiá',
+  'demo.end.title': 'Protocol: Ares',
   'demo.end.l1': 'Um jogo que ensina como viver em Marte: energia, oxigênio, água, comida e radiação.',
   'demo.end.l2': 'Dados da NASA: DONKI, MOXIE, InSight, Opportunity e mais, cada um com a sua fonte.',
   'demo.end.l3': 'Agora é a sua vez: jogue você mesmo.',

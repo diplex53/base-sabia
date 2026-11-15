@@ -18,7 +18,7 @@ export default {
   'demo.b.city': 'The City panel shows the colony becoming a city: population, comfort and dome progress.',
   'demo.b.dome': 'Final goal: the dome is complete. Base Sabiá is now a city on Mars.',
   'demo.b.lost': 'The mission was aborted. On Mars, every mistake teaches a bit of science.',
-  'demo.end.title': 'Base Sabiá',
+  'demo.end.title': 'Protocol: Ares',
   'demo.end.l1': 'A game that teaches how to live on Mars: energy, oxygen, water, food and radiation.',
   'demo.end.l2': 'NASA data: DONKI, MOXIE, InSight, Opportunity and more, each one with its source.',
   'demo.end.l3': 'Now it is your turn: play it yourself.',
