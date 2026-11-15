@@ -431,9 +431,10 @@ function reportInsets() {
   const tb = vis(topEl); if (tb) top = Math.max(top, tb.bottom);
   const sc = vis(storyCard.root); if (sc && sc.width > W * 0.6) top = Math.max(top, sc.bottom);
   for (const id of ['colonists-panel', 'alerts-panel']) { const r = vis(document.getElementById(id)); if (!r) continue; if (r.width > W * 0.6) bottom = Math.max(bottom, H - r.top); else left = Math.max(left, r.right); }
-  const sp = vis(document.getElementById('slot-panel')); if (sp) { if (sp.width > W * 0.6) bottom = Math.max(bottom, H - sp.top); else right = Math.max(right, W - sp.left); }
+  for (const id of ['slot-panel', 'city-panel']) { const sp = vis(document.getElementById(id)); if (!sp) continue; if (sp.width > W * 0.6) bottom = Math.max(bottom, H - sp.top); else right = Math.max(right, W - sp.left); }
   const tabs = vis(document.getElementById('sheet-tabs')); if (tabs) bottom = Math.max(bottom, H - tabs.top);
   const dock = vis(document.querySelector('.control-dock')); if (dock) bottom = Math.max(bottom, H - dock.top);
+  const bar = vis(document.querySelector('#hud .controls')); if (bar && bar.top > H * 0.5 && bar.width < W * 0.95) bottom = Math.max(bottom, H - bar.top);
   if (document.body.classList.contains('is-launch')) {
     top = right = bottom = left = 0;
     const launch = vis(document.querySelector('.launch-modal'));
