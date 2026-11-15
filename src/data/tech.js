@@ -9,6 +9,11 @@ export const TECHS = {
   bioregen: { cost: 50, requires: ['plantHabitat'] },       // bioregenerative life support (NASA Kennedy)
   pressurizedRover: { cost: 50, requires: ['spaceWeather'] }, // Space Exploration Vehicle
   fission: { cost: 70, requires: ['eds'] },                 // Kilopower / KRUSTY (2018)
+  // Apêndice E.4
+  domeEngineering: { cost: 90, requires: ['regolithPrinting'] },   // large regolith structures (NASA Centennial 3D-Printed Habitat Challenge)
+  hydrogenShield: { cost: 80, requires: ['domeEngineering'] },     // hydrogen-rich shielding (polyethylene / water walls)
+  sabatierProcess: { cost: 30, requires: [] },                      // Sabatier reactor (ISS ECLSS, since 2010)
+  robotics: { cost: 30, requires: [] },                             // robotic regolith excavation (NASA IPEx / RASSOR)
 };
 
 // Effect sizes (Apêndice B.6). waterRecycling uses WATER_RECYCLE_TECH and spaceWeather EVENTS.spe.warningSolsTech.

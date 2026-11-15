@@ -1,5 +1,8 @@
 // Scripted tutorial chapters. Starting stocks/capacities are game balance, not science.
-import { MODULES, oldSlotToNew } from './balance.js';
+import { MODULES, EXPANSION_MODULES, oldSlotToNew } from './balance.js';
+
+// Apêndice E.4: the story never unlocks the expansion modules.
+const STORY_MODULES = Object.keys(MODULES).filter((x) => !EXPANSION_MODULES.includes(x));
 
 export const STORY_FEATURES = ['toggle', 'assign', 'clean', 'ships', 'tech', 'expeditions', 'shelter'];
 const crew = [
@@ -44,7 +47,7 @@ export const CHAPTERS = {
     // oxygen reserve lets both candidates pass the 26-sol sustain check.
     start: { resources: { energy: 400, o2: 110, water: 100, food: 100, parts: 40, regolith: 10, science: 40 },
       modules: base, colonists: crew, tech: ['eds'], shipNextArrivalT: 41, shipManifest: manifest },
-    unlocked: { modules: Object.keys(MODULES).filter(x => x !== 'reactor'), features: ['toggle', 'assign', 'clean', 'ships', 'tech'], techs: ['eds', 'fission'] },
+    unlocked: { modules: STORY_MODULES.filter(x => x !== 'reactor'), features: ['toggle', 'assign', 'clean', 'ships', 'tech'], techs: ['eds', 'fission'] },
     scheduled: [{ atT: 44, kind: 'dustRegional', params: { tauPeak: 3, sols: 2 } },
       { atT: 46.5, kind: 'dustGlobal', params: { tauPeak: 10.8, sols: 7 } }],
     steps: [step('c2.land', { kind: 'landed', count: 2 }),
@@ -62,7 +65,7 @@ export const CHAPTERS = {
       // 600, and so does the full 100 mSv for whoever is left out on the expedition; sheltered (8.5) everyone stays under.
       colonists: crew.map((c, i) => ({ ...c, dose: i === 0 ? 565 : 500 })),
       tech: ['eds', 'fission'], shipNextArrivalT: 101, shipManifest: manifest },
-    unlocked: { modules: Object.keys(MODULES), features: STORY_FEATURES.filter(x => x !== 'ships'), techs: ['spaceWeather'] },
+    unlocked: { modules: [...STORY_MODULES], features: STORY_FEATURES.filter(x => x !== 'ships'), techs: ['spaceWeather'] },
     // the real 2017-09-10 X8.2 flare, played as moderate (Mars' atmosphere helps, as Curiosity/RAD measured)
     scheduled: [{ atT: 95, kind: 'spe', params: { severity: 'moderate', donkiId: '2017-09-10T15:35:00-FLR-001', totalMsv: 4 } }],
     steps: [step('c3.regolith', { kind: 'expeditionDone', site: 'regolith' }),

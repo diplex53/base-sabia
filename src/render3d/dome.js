@@ -19,7 +19,7 @@ function buildGeo(n) {
     for (let k = 0; k < 3; k++) { v.push([p.getX(i + k), p.getY(i + k), p.getZ(i + k)]); cy += p.getY(i + k) / 3; }
     if (cy < -0.001) continue;
     for (const a of v) { a[0] *= R; a[1] = Math.max(0, a[1]) * Hh; a[2] *= R; }
-    tris.push({ v, cy });
+    tris.push({ v, cy: Math.min(v[0][1], v[1][1], v[2][1]) });
   }
   ico.dispose();
   tris.sort((a, b) => a.cy - b.cy);
@@ -33,7 +33,7 @@ function buildGeo(n) {
       const a = t.v[k], b = t.v[(k + 1) % 3];
       const ka = a.map((x) => Math.round(x * 20)).join(','), kb = b.map((x) => Math.round(x * 20)).join(',');
       const key = ka < kb ? ka + '|' + kb : kb + '|' + ka;
-      if (!edges.has(key)) edges.set(key, [a, b, Math.max(a[1], b[1])]);
+      if (!edges.has(key)) edges.set(key, [a, b, Math.min(a[1], b[1])]);
     }
   });
   const el = [...edges.values()].sort((a, b) => a[2] - b[2]);
@@ -44,7 +44,10 @@ function buildGeo(n) {
   fill.setAttribute('color', new THREE.BufferAttribute(col, 3));
   const lines = new THREE.BufferGeometry();
   lines.setAttribute('position', new THREE.BufferAttribute(lpos, 3));
-  return { fill, lines, triCount: tris.length, edgeCount: el.length, R, Hh };
+  const triY = Float32Array.from(tris, (t) => Math.max(t.v[0][1], t.v[1][1], t.v[2][1]) - 0.0);
+  const triMinY = Float32Array.from(tris, (t) => Math.min(t.v[0][1], t.v[1][1], t.v[2][1]));
+  const edgeY = Float32Array.from(el, (e) => Math.min(e[0][1], e[1][1]));
+  return { fill, lines, triCount: tris.length, edgeCount: el.length, R, Hh, triMinY, edgeY };
 }
 
 export function createDome() {
@@ -71,8 +74,12 @@ export function createDome() {
     group.visible = !!info.exists && !!g;
     if (!group.visible) return;
     const p = info.building ? Math.max(0, Math.min(1, info.progress || 0)) : 1;
-    mesh.geometry.setDrawRange(0, Math.floor(p * g.triCount) * 3);
-    lines.geometry.setDrawRange(0, Math.min(g.edgeCount, Math.ceil(Math.min(1, p * 1.04 + 0.01) * g.edgeCount)) * 2);
+    // panels / frame appear from the ground up: a facet shows once its lowest point is below the rising level
+    const lvl = p >= 1 ? 1e9 : p * g.Hh;
+    let tc = 0; while (tc < g.triCount && g.triMinY[tc] <= lvl) tc++;
+    let ec = 0; while (ec < g.edgeCount && g.edgeY[ec] <= lvl) ec++;
+    mesh.geometry.setDrawRange(0, tc * 3);
+    lines.geometry.setDrawRange(0, ec * 2);
     fillMat.color.copy(GLASS).lerp(AMBER, info.amber ? 0.55 : 0);
     fillMat.opacity = info.building ? 0.09 : 0.15;
     lineMat.color.copy(LINE).lerp(LINE_AMBER, info.amber ? 0.6 : 0);

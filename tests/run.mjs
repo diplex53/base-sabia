@@ -1106,9 +1106,9 @@ test('story: every check kind works in isolation', () => {
   // built (with level)
   g = checkChapter({ kind: 'built', module: 'shelter', count: 1, level: 2 });
   g.state.resources.regolith = 200;
-  assert.ok(g.dispatch({ type: 'build', slotId: 's12', moduleType: 'shelter' }).ok);
+  assert.ok(g.dispatch({ type: 'build', slotId: 's23', moduleType: 'shelter' }).ok);
   assert.equal(doneNow(g, 2.05), false, 'level 1 is not enough');
-  assert.ok(g.dispatch({ type: 'upgrade', slotId: 's12' }).ok);
+  assert.ok(g.dispatch({ type: 'upgrade', slotId: 's23' }).ok);
   assert.equal(doneNow(g, 2.05), true, 'built level 2');
   // tReached: fixed, and after the step started (capped at maxT)
   g = checkChapter({ kind: 'tReached', t: 91 });
@@ -1117,21 +1117,21 @@ test('story: every check kind works in isolation', () => {
   assert.equal(doneNow(g, 0.9), false); assert.equal(doneNow(g, 0.15), true);
   // netNonNegative and stockAtLeast
   g = checkChapter({ kind: 'netNonNegative', res: 'o2' });
-  assert.ok(g.dispatch({ type: 'toggle', slotId: 's7', enabled: false }).ok);
+  assert.ok(g.dispatch({ type: 'toggle', slotId: 's16', enabled: false }).ok);
   assert.equal(doneNow(g), false);
-  assert.ok(g.dispatch({ type: 'toggle', slotId: 's7', enabled: true }).ok);
+  assert.ok(g.dispatch({ type: 'toggle', slotId: 's16', enabled: true }).ok);
   assert.equal(doneNow(g), true);
   g = checkChapter({ kind: 'stockAtLeast', res: 'parts', amount: 50 });
   assert.equal(doneNow(g), false); g.state.resources.parts = 50; assert.equal(doneNow(g), true);
   // assigned (profession and module type)
   g = checkChapter({ kind: 'assigned', profession: 'botanist', module: 'greenhouse' });
-  assert.ok(g.dispatch({ type: 'assign', colonistId: colonist(g, 'engineer').id, slotId: 's9' }).ok);
+  assert.ok(g.dispatch({ type: 'assign', colonistId: colonist(g, 'engineer').id, slotId: 's20' }).ok);
   assert.equal(doneNow(g), false);
-  assert.ok(g.dispatch({ type: 'assign', colonistId: colonist(g, 'botanist').id, slotId: 's5' }).ok);
+  assert.ok(g.dispatch({ type: 'assign', colonistId: colonist(g, 'botanist').id, slotId: 's14' }).ok);
   assert.equal(doneNow(g), true);
   // cleaned: a cleaning has to finish
   g = checkChapter({ kind: 'cleaned' });
-  assert.ok(g.dispatch({ type: 'clean', slotId: 's1' }).ok);
+  assert.ok(g.dispatch({ type: 'clean', slotId: 's8' }).ok);
   assert.equal(doneNow(g), false);
   assert.equal(doneNow(g, 0.2), true);
   // researched
@@ -1168,7 +1168,7 @@ test('story: every check kind works in isolation', () => {
   assert.equal(doneNow(g, 2), true);
   g = checkChapter({ kind: 'eventEnded', event: 'dustRegional' }, { scheduled: [{ atT: 90.5, kind: 'dustRegional', params: { sols: 1, tauPeak: 2 } }] });
   assert.equal(doneNow(g, 0.9), false); assert.equal(doneNow(g, 0.4), true);
-  g = checkChapter({ kind: 'shelteredWhen', severity: 'severe' }, { modules: [...CHAPTERS[3].start.modules, { slot: 's12', type: 'shelter', level: 1 }],
+  g = checkChapter({ kind: 'shelteredWhen', severity: 'severe' }, { modules: [...CHAPTERS[3].start.modules, { slot: 's23', type: 'shelter', level: 1 }],
     scheduled: [{ atT: 90.4, kind: 'spe', params: { severity: 'severe', donkiId: SEVERE.id, warningSols: 0.1 } }] });
   assert.ok(g.dispatch({ type: 'setShelter', on: true }).ok);
   assert.equal(doneNow(g, 0.15), false, 'sheltered in the warning phase only');
