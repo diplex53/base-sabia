@@ -651,3 +651,10 @@ body.is-launch #hud,body.is-launch #story-card { visibility: hidden; pointer-eve
   .v2d-big .v2d-grid { width: min(94vw, 420px); }
   .chip-health .hbar { width: 28px; }
 }
+/* 2D view, 72-slot map: empty slots are plain soil with only a "+" (the button keeps its aria-label) */
+.tile.st-empty { background: #7a4a32; border: 1px solid #00000000; color: #f2dfb6; }
+.tile.st-empty:hover, .tile.st-empty.selected { background: #8a573c; border-color: #f2dfb680; }
+.tile.st-empty .tile-status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.v2d-huge .v2d-grid { gap: 3px; }
+.v2d-huge .tile { padding: 2px; min-height: 0; }
+.v2d-huge .tile.st-empty .tile-name { font-size: 1.1rem; margin-top: 0; }

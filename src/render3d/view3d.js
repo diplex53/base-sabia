@@ -9,7 +9,7 @@ import { ModuleCache, ModuleView } from './modules.js';
 import { skyParams, createBackground } from './sky.js';
 import { createDust, createBeacons, createGlows, createOutlines } from './effects.js';
 import { createColonists } from './colonists.js';
-import { cellCenter, PAD, PAD_H, PAN_LIMIT, GARAGE, LANDING_PAD, SITES, CELL, setGridSize, gridSizeOf, BATTERY_CAPACITY_FALLBACK } from './layout.js';
+import { cellCenter, PAD, PAD_H, PAN_LIMIT, GARAGE, LANDING_PAD, SITES, CELL, setGridSize, gridSizeOf, gridBoundsOf, boundsRect, DEFAULT_BOUNDS, BATTERY_CAPACITY_FALLBACK } from './layout.js';
 import { createDome } from './dome.js';
 
 let BATTERY_CAPS = BATTERY_CAPACITY_FALLBACK;
@@ -23,9 +23,13 @@ const DEG = Math.PI / 180;
 const CLICK_PX = 6;
 const SITE_GLOW = { ice: 0x7fe8ff, regolith: 0xff9a3c, minerals: 0xc58bff };
 const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
-// screen extent (world units) of the NxN grid plus ~1 cell margin, at the default view angle (az 45, polar 55)
-const gridW = (n) => n * CELL * 1.414 + 14.5;
-const gridH = (n) => n * CELL * 0.81 + 14.5;
+// screen extent (world units) of the build area (b = cell bounds) plus ~1 cell margin, at the default view angle (az 45, polar 55)
+const gridW = (b) => (b.gx1 - b.gx0 + b.gz1 - b.gz0 + 2) * CELL * 0.707 + 14.5;
+const gridH = (b) => (b.gx1 - b.gx0 + b.gz1 - b.gz0 + 2) * CELL * 0.405 + 14.5;
+// The camera sits far from its target so the wide far ground never crosses the near plane; fog distances
+// from sky.js were tuned for a distance of 180 and are shifted by the difference.
+const DIST = 700;
+const FOG_SHIFT = DIST - 180;
 
 function batteryFraction(state) {
   let cap = 0;
@@ -62,16 +66,17 @@ export function createView(container, { onSlotClick, onSiteClick, onSlotContext 
   container.appendChild(canvas);
 
   const scene = new THREE.Scene();
-  scene.fog = new THREE.Fog(0xe0b890, 200, 420);
+  scene.fog = new THREE.Fog(0xe0b890, 200 + FOG_SHIFT, 420 + FOG_SHIFT);
   const bg = createBackground();
 
   // camera: orthographic isometric
-  const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 1, 700);
+  const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 1, DIST + 900);
   const target = new THREE.Vector3(0, 0, 0);
-  const DIST = 180;
   const polar = 55 * DEG, az = 45 * DEG;
+  let bounds = { ...DEFAULT_BOUNDS };
   function homeCamera() {
-    target.set(0, 0, 0);
+    const R = boundsRect(bounds);
+    target.set(R.cx, 0, R.cz);
     camera.position.set(target.x + DIST * Math.sin(polar) * Math.sin(az), target.y + DIST * Math.cos(polar), target.z + DIST * Math.sin(polar) * Math.cos(az));
     camera.zoom = 1;
     camera.lookAt(target);
@@ -84,8 +89,8 @@ export function createView(container, { onSlotClick, onSiteClick, onSlotContext 
   controls.dampingFactor = 0.08;
   controls.minPolarAngle = 35 * DEG;
   controls.maxPolarAngle = 65 * DEG;
-  controls.minZoom = 0.5;
-  controls.maxZoom = 4;
+  controls.minZoom = 0.17;   // ~3x farther out than before: the far ground and fog fill the view
+  controls.maxZoom = 5;
   controls.screenSpacePanning = false;
   controls.zoomSpeed = 1.2;
   controls.rotateSpeed = 0.7;
@@ -111,8 +116,9 @@ export function createView(container, { onSlotClick, onSiteClick, onSlotContext 
 
   // static world
   const staticMat = makeVoxMaterial();
-  let gridN = 6;
-  let terrain = buildTerrain(gridN);
+  let gridN = 6;   // core 6x6 block (the dome covers it)
+  let boundsSig = '';
+  let terrain = buildTerrain(bounds);
   const staticMesh = new THREE.Mesh(terrain.geometry, staticMat);
   staticMesh.receiveShadow = true;
   staticMesh.castShadow = true;
@@ -223,14 +229,19 @@ export function createView(container, { onSlotClick, onSiteClick, onSlotContext 
     }
   }
 
-  function applyGrid(n) {
-    if (n === gridN) return;
-    gridN = n;
+  boundsSig = [bounds.gx0, bounds.gx1, bounds.gz0, bounds.gz1].join(',');
+  function applyGrid(n, b) {
+    const sig = [b.gx0, b.gx1, b.gz0, b.gz1].join(',');
+    if (n === gridN && sig === boundsSig) return;
+    const rebuild = sig !== boundsSig;
+    gridN = n; boundsSig = sig; bounds = { ...b };
     setGridSize(n);
-    const old = terrain.geometry;
-    terrain = buildTerrain(n);
-    staticMesh.geometry = terrain.geometry;
-    old.dispose();
+    if (rebuild) {
+      const old = terrain.geometry;
+      terrain = buildTerrain(bounds);
+      staticMesh.geometry = terrain.geometry;
+      old.dispose();
+    }
     dome.setGrid(n);
     for (const v of views.values()) { scene.remove(v.group); v.dispose(); }
     views.clear(); slotInfo.clear(); lastSig.clear();
@@ -242,7 +253,7 @@ export function createView(container, { onSlotClick, onSiteClick, onSlotContext 
   }
 
   function sync(st) {
-    applyGrid(gridSizeOf(st.slots));
+    applyGrid(gridSizeOf(st.slots), gridBoundsOf(st.slots));
     const empties = [];
     let domeMod = null, shield = false;
     for (const sl of st.slots || []) {
@@ -353,7 +364,7 @@ export function createView(container, { onSlotClick, onSiteClick, onSlotContext 
   function frame2D() {
     // centre the 4x4 grid in the free rectangle (not covered by HUD panels) and fit it to ~85% of it
     const fw = Math.max(120, W - insets.left - insets.right), fh = Math.max(120, H - insets.top - insets.bottom);
-    const S = Math.min(fw * 0.85 / gridW(gridN), fh * 0.85 / (gridH(gridN) + domeExtra * 0.5));   // px per world unit at zoom 1
+    const S = Math.min(fw * 0.85 / gridW(bounds), fh * 0.85 / (gridH(bounds) + domeExtra * 0.5));   // px per world unit at zoom 1
     const cx = insets.left + fw / 2, cy = insets.top + fh / 2 + 2 * S;   // modules rise above the ground: nudge the ground point down
     camera.left = -cx / S; camera.right = (W - cx) / S; camera.top = cy / S; camera.bottom = -(H - cy) / S;
     camera.updateProjectionMatrix();
@@ -517,7 +528,7 @@ export function createView(container, { onSlotClick, onSiteClick, onSlotContext 
       hemi.color.copy(sky.hemiSky); hemi.groundColor.copy(sky.hemiGround); hemi.intensity = sky.hemiI;
       fill.intensity = sky.fillI;
       scene.fog.color.copy(sky.fogColor);
-      scene.fog.near = sky.fogNear; scene.fog.far = sky.fogFar;
+      scene.fog.near = sky.fogNear + FOG_SHIFT; scene.fog.far = sky.fogFar + FOG_SHIFT;
       sky.shipPoint = shipVisible();
       if (sky.speActive) {
         const me = camera.matrixWorld.elements, sd = sky.sunDir;

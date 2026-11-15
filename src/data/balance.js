@@ -264,9 +264,23 @@ export const EXPEDITIONS = {
 };
 export const EXPEDITION_SITES = ['regolith', 'ice', 'minerals'];
 
-// 36 fixed slots in a 6x6 grid (Apêndice E.1): s1 = (0,0), s2 = (1,0), ..., s36 = (5,5), numbered by rows.
+// 72 fixed slots in a 9x8 grid. The original 6x6 block (Apêndice E.1) keeps its ids and cells:
+// s1 = (0,0), s2 = (1,0), ..., s36 = (5,5), numbered by rows, world x = (gx - 2.5) * CELL.
+// The 36 slots added around it (gx -1..7, gz -1..6) are numbered s37..s72 row by row over the new cells only:
+//   s37..s45 = row gz -1, gx -1..7;  s46..s63 = rows gz 0..5, gx -1, 6, 7 each;  s64..s72 = row gz 6, gx -1..7.
+// So gx and gz can be negative; the start base (s15, s16, s21) stays in the middle.
 export const GRID_N = 6;
-export const SLOTS = Array.from({ length: GRID_N * GRID_N }, (_, i) => ({ id: `s${i + 1}`, gx: i % GRID_N, gz: Math.floor(i / GRID_N) }));
+export const GRID_MIN = { gx: -1, gz: -1 };
+export const GRID_MAX = { gx: 7, gz: 6 };
+const OLD_SLOTS = Array.from({ length: GRID_N * GRID_N }, (_, i) => ({ id: `s${i + 1}`, gx: i % GRID_N, gz: Math.floor(i / GRID_N) }));
+const NEW_SLOTS = [];
+for (let gz = GRID_MIN.gz; gz <= GRID_MAX.gz; gz++) {
+  for (let gx = GRID_MIN.gx; gx <= GRID_MAX.gx; gx++) {
+    if (gx >= 0 && gx < GRID_N && gz >= 0 && gz < GRID_N) continue;
+    NEW_SLOTS.push({ id: `s${GRID_N * GRID_N + NEW_SLOTS.length + 1}`, gx, gz });
+  }
+}
+export const SLOTS = [...OLD_SLOTS, ...NEW_SLOTS];
 
 /** Id of the slot at (gx, gz) in the 6x6 grid. */
 export const slotIdAt = (gx, gz) => `s${gz * GRID_N + gx + 1}`;
@@ -284,9 +298,10 @@ export function oldSlotToNew(id) {
 // Off-grid sites, used in Phase 3 (expeditions).
 export const SITES = [
   // shifted (+0..+2, +1) with the 6x6 map (E.1) so they stay off the grid
-  { id: 'ice', gx: -2, gz: 0 },
-  { id: 'regolith', gx: 7, gz: 2 },
-  { id: 'minerals', gx: 7, gz: 5 },
+  // (72-slot map: moved again so they stay outside gx -1..7, gz -1..6)
+  { id: 'ice', gx: -3, gz: 0 },
+  { id: 'regolith', gx: 9, gz: 2 },
+  { id: 'minerals', gx: 9, gz: 5 },
 ];
 
 export const START = {

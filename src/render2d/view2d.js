@@ -19,6 +19,7 @@ export function createView(container, { onSlotClick, onSiteClick, onSlotContext 
   container.append(root);
 
   const tiles = new Map();
+  const off = { gx: 0, gz: 0 };   // grid offset: the smallest gx / gz on the map
   let selected = null;
   let lastBg = '';
   const chips = [];
@@ -38,8 +39,9 @@ export function createView(container, { onSlotClick, onSiteClick, onSlotContext 
       node.addEventListener('touchstart', () => { timer = setTimeout(() => { timer = null; onSlotContext(slot.id); }, 600); }, { passive: true });
       for (const ev of ['touchend', 'touchmove', 'touchcancel']) node.addEventListener(ev, () => { if (timer) { clearTimeout(timer); timer = null; } }, { passive: true });
     }
-    node.style.gridColumn = String(slot.gx + 1);
-    node.style.gridRow = String(slot.gz + 1);
+    // gx / gz can be negative on the 72-slot map (the original 6x6 block keeps 0..5)
+    node.style.gridColumn = String(slot.gx - off.gx + 1);
+    node.style.gridRow = String(slot.gz - off.gz + 1);
     grid.append(node);
     if (hl.includes(slot.id)) node.classList.add('guide-target');
     tiles.set(slot.id, { node, name, level, mark, stText, bar, dust, sig: '' });
@@ -71,10 +73,15 @@ export function createView(container, { onSlotClick, onSiteClick, onSlotContext 
     paintBg(state);
     if (tiles.size !== state.slots.length) {
       tiles.clear(); grid.replaceChildren();
-      const n = Math.max(...state.slots.map((s) => Math.max(s.gx, s.gz)), 3) + 1;
-      grid.style.gridTemplateColumns = 'repeat(' + n + ', minmax(0, 1fr))';
-      grid.style.gridTemplateRows = 'repeat(' + n + ', minmax(0, 1fr))';
-      root.classList.toggle('v2d-big', n > 4);
+      off.gx = Math.min(0, ...state.slots.map((s) => s.gx));
+      off.gz = Math.min(0, ...state.slots.map((s) => s.gz));
+      const nx = Math.max(...state.slots.map((s) => s.gx), 3) - off.gx + 1;
+      const nz = Math.max(...state.slots.map((s) => s.gz), 3) - off.gz + 1;
+      grid.style.gridTemplateColumns = 'repeat(' + nx + ', minmax(0, 1fr))';
+      grid.style.gridTemplateRows = 'repeat(' + nz + ', minmax(0, 1fr))';
+      grid.style.aspectRatio = nx + ' / ' + nz;
+      root.classList.toggle('v2d-big', Math.max(nx, nz) > 4);
+      root.classList.toggle('v2d-huge', Math.max(nx, nz) > 6);
       state.slots.forEach(addTile);
     }
     const lg = getLang();
