@@ -78,6 +78,8 @@ const ctx = {
   },
   continueGame,
   openTech: () => modals.showTech(),
+  canToggleDome: () => !!(view && view.setDomeVisible),
+  setDomeVisible: (on) => { if (view && view.setDomeVisible) view.setDomeVisible(on); },
   openCraft: () => modals.showCraft(),
   openInventory: () => modals.showInventory(),
   openShip: () => { if (!modals.showShipInfo(game.state)) toast(t('ui.shipIn', { n: Math.max(0, Math.ceil(game.state.ship.nextArrivalT - game.state.t)) })); },
@@ -131,10 +133,10 @@ demo = createAutoplay({
   openTech: () => modals.showTech(),
   showScience: (id) => modals.showScience(id, { spe: lastSpe || (game.state.env && game.state.env.spe) }),
   onExit: () => exitDemo(),
-  onReplay: () => startDemo(),
+  onReplay: () => startDemo(demo.mode),
   onPlay: () => { exitDemo({ toStart: false }); startColony('cadet'); },
 });
-function startDemo() {
+function startDemo(mode = 'presenter') {
   if (demo.active) demo.stop();
   modals.closeAll();
   game = createGame({ mode: 'colony', seed: DEMO_SEED, difficulty: DEMO_DIFFICULTY });
@@ -147,7 +149,7 @@ function startDemo() {
   speed = 1;
   started = true;
   setLaunchScreen(false);
-  demo.start();
+  demo.start({ mode });
 }
 function exitDemo({ toStart = true } = {}) {
   demo.stop();
@@ -492,6 +494,7 @@ if (window.ResizeObserver) new ResizeObserver(() => document.documentElement.sty
 applyStatic();
 loadSunToday();
 onLangChange(() => { applyStatic(); document.title = t('ui.title'); });
-if (new URLSearchParams(location.search).get('demo') === '1') startDemo(); else modals.showStart();
+const demoParam = new URLSearchParams(location.search).get('demo'); // 1 = presenter (pauses at each beat), auto = timed show
+if (demoParam === '1' || demoParam === 'auto') startDemo(demoParam === 'auto' ? 'auto' : 'presenter'); else modals.showStart();
 mountView().catch((e) => console.error(e));
 requestAnimationFrame(frame);

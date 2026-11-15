@@ -1,7 +1,11 @@
 // Presentation mode (src/demo/autoplay.js)
 export default {
   'demo.start': 'Start presentation',
-  'demo.startNote': 'The game plays itself for about 3 minutes.',
+  'demo.startNote': 'The game plays itself and stops at each new thing. Press Space to continue.',
+  'demo.continue': 'Continue ▶ (Space)',
+  'demo.b.devil': 'Dust devil: on Mars they sometimes clean the solar panels, as happened to the Spirit and Opportunity rovers.',
+  'demo.b.quake': 'Marsquake! NASA\'s InSight lander recorded more than 1,300 quakes on Mars.',
+  'demo.b.failure': 'A module broke down. Parts and an engineer fix it: on Mars there is no repair service to call.',
   'demo.badge': 'Presentation',
   'demo.exit': 'Exit',
   'demo.b.intro': 'Sol 1 on Mars: a habitat, solar panels and a battery. Every number in the game comes from NASA data.',

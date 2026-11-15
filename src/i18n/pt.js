@@ -8,6 +8,7 @@ import p5 from './pt5.js';
 import p4 from './pt4.js';
 import p3 from './pt3.js';
 import p12 from './pt12.js';
+import p13 from './pt13.js';
 export default {
   // geral
   'ui.title': 'Protocol: Ares',
@@ -266,4 +267,5 @@ export default {
   ...p10,
   ...p11,
   ...p12,
+  ...p13,
 };

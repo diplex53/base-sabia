@@ -1,7 +1,11 @@
 // Modo apresentação (src/demo/autoplay.js)
 export default {
   'demo.start': 'Iniciar apresentação',
-  'demo.startNote': 'O jogo se joga sozinho por cerca de 3 minutos.',
+  'demo.startNote': 'O jogo se joga sozinho e para a cada novidade. Aperte Espaço para continuar.',
+  'demo.continue': 'Continuar ▶ (Espaço)',
+  'demo.b.devil': 'Redemoinho de poeira: em Marte eles às vezes limpam os painéis solares, como aconteceu com os rovers Spirit e Opportunity.',
+  'demo.b.quake': 'Martemoto! O módulo InSight da NASA registrou mais de 1.300 tremores em Marte.',
+  'demo.b.failure': 'Um módulo quebrou. Peças e um engenheiro consertam: em Marte não dá para chamar a assistência técnica.',
   'demo.badge': 'Apresentação',
   'demo.exit': 'Sair',
   'demo.b.intro': 'Sol 1 em Marte: um habitat, painéis solares e uma bateria. Cada número do jogo vem de dados da NASA.',

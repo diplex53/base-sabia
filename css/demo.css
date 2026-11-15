@@ -32,3 +32,14 @@ body.is-demo #toast-root { display: none; }
 body.is-demo #hud { pointer-events: none; }
 body.is-demo #city-panel.demo-focus { outline: 3px solid #ff8a3d; outline-offset: 2px; }
 .launch-demo { margin-top: 8px; }
+/* presenter mode: continue button inside the caption box (above the badge and the HUD) */
+.demo-caption-text[hidden], .demo-continue[hidden] { display: none; }
+.demo-caption .demo-continue {
+  display: inline-block; margin-top: 12px; pointer-events: auto; cursor: pointer;
+  padding: 8px 18px; font-size: 16px; font-weight: 700; line-height: 1.2;
+  animation: demo-pulse 1.6s ease-in-out infinite;
+}
+.demo-caption-text[hidden] + .demo-continue { margin-top: 0; }
+.demo-caption .demo-continue[hidden] { display: none; }
+@keyframes demo-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(255, 138, 61, 0.55); } 50% { box-shadow: 0 0 0 6px rgba(255, 138, 61, 0); } }
+@media (prefers-reduced-motion: reduce) { .demo-caption .demo-continue { animation: none; } }

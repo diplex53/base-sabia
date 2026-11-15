@@ -8,6 +8,7 @@ import e5 from './en5.js';
 import e4 from './en4.js';
 import e3 from './en3.js';
 import e12 from './en12.js';
+import e13 from './en13.js';
 export default {
   // general
   'ui.title': 'Protocol: Ares',
@@ -266,4 +267,5 @@ export default {
   ...e10,
   ...e11,
   ...e12,
+  ...e13,
 };

@@ -18,6 +18,7 @@ const CHUNK = 0.01;                   // fixed sim step (sol): the run is the sa
 const FAST = 30;                      // sim speed between beats
 const SLOW = 1;                       // sim speed while a caption about an on-screen event shows
 const MAX_REAL = 200;                 // safety: end card after this many real seconds
+const MAX_REAL_PRESENTER = 240;       // presenter mode: same safety, counting only un-paused time
 const PANEL_SECONDS = 6;
 const TECH_SECONDS = 5;
 const STRAY_MODAL_SECONDS = 2;
@@ -270,6 +271,15 @@ function staff(game) {
 // Script
 
 const BEAT_SECONDS = { intro: 7, moxie: 7, water: 6, dust: 7, spe: 7, tech: 6, ship: 7, expedition: 6, city: 6, grow: 6, reactor: 6, domeTech: 6, dome: 7, lost: 6 };
+const CONTINUE_KEYS = new Set([' ', 'Spacebar', 'Enter', 'ArrowRight']);
+
+/*
+ * Two modes:
+ *  - 'presenter' (default, ?demo=1 and the title-screen button): the bot plays fast between beats; when a beat
+ *    starts or the demo opens a panel, the sim freezes (no ticks, no bot) until the presenter continues
+ *    (Space / Enter / ArrowRight / the button). MAX_REAL counts only un-paused time.
+ *  - 'auto' (?demo=auto): the original timed show for unattended screens.
+ */
 
 /**
  * h = { getGame, modalsOpen, closeModals, openTech, showScience(id), onExit, onReplay, onPlay }
@@ -284,14 +294,22 @@ export function createAutoplay(h) {
   let log = [];
   let ships = 0;
   let ui = null;
+  let presenter = true;
+  let demoModal = false; // presenter mode: a panel/modal the demo opened is waiting for the presenter
 
   function buildUi() {
     if (!hasDom || ui) return;
     const mk = (tag, cls, txt) => { const n = document.createElement(tag); if (cls) n.className = cls; if (txt != null) n.textContent = txt; return n; };
     const caption = mk('div', 'demo-caption');
-    caption.setAttribute('role', 'status');
-    caption.setAttribute('aria-live', 'polite');
     caption.hidden = true;
+    const capText = mk('div', 'demo-caption-text');
+    capText.setAttribute('role', 'status');
+    capText.setAttribute('aria-live', 'polite');
+    const cont = mk('button', 'btn btn-primary demo-continue');
+    cont.type = 'button';
+    cont.hidden = true;
+    cont.addEventListener('click', () => { advance(); try { cont.blur(); } catch (e) { /* ignore */ } });
+    caption.append(capText, cont);
     const badge = mk('div', 'demo-badge');
     const badgeLabel = mk('span', 'demo-badge-label');
     const exitBtn = mk('button', 'btn demo-exit');
@@ -301,7 +319,7 @@ export function createAutoplay(h) {
     const end = mk('div', 'demo-end-back');
     end.hidden = true;
     document.body.append(caption, badge, end);
-    ui = { caption, badge, badgeLabel, exitBtn, end };
+    ui = { caption, capText, cont, badge, badgeLabel, exitBtn, end };
     window.addEventListener('keydown', (e) => {
       if (!active || e.key !== 'Escape') return;
       e.preventDefault(); e.stopPropagation();
@@ -314,7 +332,14 @@ export function createAutoplay(h) {
     if (!ui) return;
     ui.badgeLabel.textContent = t('demo.badge');
     ui.exitBtn.textContent = t('demo.exit');
-    if (cur) { ui.caption.textContent = t('demo.b.' + cur.key); ui.caption.hidden = false; } else ui.caption.hidden = true;
+    const wait = waiting();
+    if (cur || wait) {
+      ui.capText.textContent = cur ? t('demo.b.' + cur.key) : '';
+      ui.capText.hidden = !cur;
+      ui.cont.textContent = t('demo.continue');
+      ui.cont.hidden = !wait;
+      ui.caption.hidden = false;
+    } else { ui.caption.hidden = true; ui.cont.hidden = true; }
     if (finished && !ui.end.hidden) renderEnd();
   }
 
@@ -333,6 +358,26 @@ export function createAutoplay(h) {
     setTimeout(() => { try { play.focus(); } catch (e) { /* ignore */ } }, 0);
   }
 
+  function waiting() { return active && !finished && presenter && (!!cur || demoModal); }
+
+  /** Presenter continues: close what the demo opened, end the beat, resume fast play. No-op when nothing waits. */
+  function advance() {
+    if (!waiting()) return false;
+    if (h.modalsOpen()) { try { h.closeModals(); } catch (e) { /* ignore */ } }
+    demoModal = false; modalT = 0; modalLimit = STRAY_MODAL_SECONDS;
+    if (cur) endBeat(); else paint();
+    return true;
+  }
+
+  function onKey(e) {
+    if (!active || finished || !presenter) return;
+    if (e.ctrlKey || e.metaKey || e.altKey || !CONTINUE_KEYS.has(e.key)) return;
+    if (!waiting()) return; // nothing to continue: leave the key alone
+    e.preventDefault(); e.stopPropagation();
+    if (e.repeat) return; // holding the key must not skip several beats
+    advance();
+  }
+
   function push(key) {
     if (seen.has(key) || finished) return;
     seen.add(key);
@@ -340,9 +385,9 @@ export function createAutoplay(h) {
   }
 
   function startBeat(key) {
-    cur = { key, until: tReal + (BEAT_SECONDS[key] || 6), slow: key !== 'intro' };
+    cur = { key, until: presenter ? Infinity : tReal + (BEAT_SECONDS[key] || 6), slow: key !== 'intro' };
     log.push({ key, at: Math.round(tReal), sol: Math.floor(h.getGame().state.t) + 1 });
-    if (key === 'tech' && h.openTech && !h.modalsOpen()) { try { h.openTech(); modalLimit = TECH_SECONDS; modalT = 0; } catch (e) { /* ignore */ } }
+    if (key === 'tech' && h.openTech && !h.modalsOpen()) { try { h.openTech(); modalLimit = TECH_SECONDS; modalT = 0; demoModal = presenter; } catch (e) { /* ignore */ } }
     if (key === 'city' && hasDom) {
       const cp = document.getElementById('city-panel');
       if (cp) { cp.classList.remove('is-collapsed'); cp.classList.add('demo-focus'); }
@@ -360,7 +405,7 @@ export function createAutoplay(h) {
   function finish() {
     if (finished) return;
     finished = true;
-    cur = null; queue = [];
+    cur = null; queue = []; demoModal = false;
     log.push({ key: 'end', at: Math.round(tReal), sol: Math.floor(h.getGame().state.t) + 1 });
     if (h.closeModals) { try { h.closeModals(); } catch (e) { /* ignore */ } }
     if (ui) { ui.caption.hidden = true; ui.end.hidden = false; renderEnd(); }
@@ -369,6 +414,11 @@ export function createAutoplay(h) {
   function update(dtReal) {
     if (!active || finished) return;
     const dt = Math.max(0, Math.min(0.1, dtReal || 0));
+    if (presenter) {
+      if (demoModal && !h.modalsOpen()) { demoModal = false; paint(); } // presenter closed the panel by hand
+      if (!cur && queue.length) startBeat(queue.shift());
+      if (cur || demoModal) return; // frozen until the presenter continues (no ticks, no bot, no clock)
+    }
     tReal += dt;
     if (h.modalsOpen()) {
       modalT += dt;
@@ -377,7 +427,7 @@ export function createAutoplay(h) {
     if (cur && tReal >= cur.until) endBeat();
     if (finished) return;
     if (!cur && queue.length) startBeat(queue.shift());
-    if (!cur && tReal >= MAX_REAL) { finish(); return; }
+    if (!cur && tReal >= (presenter ? MAX_REAL_PRESENTER : MAX_REAL)) { finish(); return; }
     const game = h.getGame();
     if (game.state.over) { push('lost'); return; }
     if (h.modalsOpen()) return; // the sim waits while a panel is on screen
@@ -405,6 +455,9 @@ export function createAutoplay(h) {
       } else if (ev.type === 'event.start') {
         if (ev.kind === 'dustRegional' || ev.kind === 'dustGlobal') push('dust');
         else if (ev.kind === 'spe') push('spe');
+        else if (presenter && ev.kind === 'dustDevil') push('devil');
+        else if (presenter && ev.kind === 'marsquake') push('quake');
+        else if (presenter && ev.kind === 'failure') push('failure');
       } else if (ev.type === 'tech.unlocked') push(ev.techId === 'domeEngineering' ? 'domeTech' : 'tech');
       else if (ev.type === 'ship.arrived') { ships++; push('ship'); if (ships >= 3) push('grow'); }
       else if (ev.type === 'expedition.done') push('expedition');
@@ -419,12 +472,17 @@ export function createAutoplay(h) {
     seen.add('panel.' + id);
     if (id === 'moxieEnergy') push('moxie');
     if (h.modalsOpen()) return;
-    try { h.showScience(id); modalLimit = PANEL_SECONDS; modalT = 0; } catch (e) { /* ignore */ }
+    try { h.showScience(id); modalLimit = PANEL_SECONDS; modalT = 0; demoModal = presenter; } catch (e) { /* ignore */ }
     log.push({ key: 'panel.' + id, at: Math.round(tReal), sol: Math.floor(h.getGame().state.t) + 1 });
+    paint();
   }
 
-  function start() {
+  /** opts.mode: 'presenter' (default) or 'auto' (the original timed show). */
+  function start(opts = {}) {
     buildUi();
+    presenter = opts.mode !== 'auto';
+    demoModal = false;
+    if (hasDom) { window.removeEventListener('keydown', onKey, true); if (presenter) window.addEventListener('keydown', onKey, true); }
     active = true; finished = false;
     tReal = 0; budget = 0; modalT = 0; modalLimit = STRAY_MODAL_SECONDS;
     cur = null; queue = []; seen = new Set(); log = [];
@@ -436,16 +494,19 @@ export function createAutoplay(h) {
     paint();
   }
   function stop() {
-    active = false; finished = false; cur = null; queue = [];
+    active = false; finished = false; cur = null; queue = []; demoModal = false;
     if (hasDom) {
+      window.removeEventListener('keydown', onKey, true);
       document.body.classList.remove('is-demo');
       const cp = document.getElementById('city-panel'); if (cp) cp.classList.remove('demo-focus');
     }
-    if (ui) { ui.caption.hidden = true; ui.end.hidden = true; ui.end.replaceChildren(); ui.badge.hidden = true; }
+    if (ui) { ui.caption.hidden = true; ui.cont.hidden = true; ui.end.hidden = true; ui.end.replaceChildren(); ui.badge.hidden = true; }
   }
 
   return {
-    start, stop, update, onEvents, onScience,
+    start, stop, update, onEvents, onScience, advance,
+    get mode() { return presenter ? 'presenter' : 'auto'; },
+    get paused() { return waiting(); },
     get active() { return active; },
     get finished() { return finished; },
     get log() { return log; },

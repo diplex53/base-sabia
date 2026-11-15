@@ -74,6 +74,14 @@ export function createHud(ctx) {
   subs.dome = { val: el('span', { class: 'num' }) };
   subs.dome.root = el('button', { type: 'button', class: 'chip chip-btn chip-res', hidden: true, onclick: () => openCity() }, icon('shelter'), subs.dome.val);
   subWrap.append(subs.dome.root);
+  // hide / show the 3D dome shell (view only; 3D view only)
+  let domeShown = true;
+  subs.domeToggle = el('button', { type: 'button', class: 'chip chip-btn chip-res dome-toggle', hidden: true, onclick: () => {
+    domeShown = !domeShown;
+    if (ctx.setDomeVisible) ctx.setDomeVisible(domeShown);
+    setText(subs.domeToggle, t(domeShown ? 'ui.dome.hide' : 'ui.dome.show'));
+  } });
+  subWrap.append(subs.domeToggle);
   const chipWrap = el('div', { class: 'status-chips' }, c.time, c.pop, c.health, c.ship, c.delay);
 
   const speedBtns = [0, 1, 2, 4].map((s) => el('button', {
@@ -233,6 +241,13 @@ export function createHud(ctx) {
     const showDome = !!dm && (dm.kind !== 'none');
     subs.dome.root.hidden = !showDome;
     if (showDome) setText(subs.dome.val, t('ui.dome.title') + ' ' + (dm.kind === 'done' ? '✓' : Math.round(dm.progress * 100) + '%'));
+    const canToggle = showDome && !!(ctx.canToggleDome && ctx.canToggleDome());
+    if (!showDome) domeShown = true;
+    subs.domeToggle.hidden = !canToggle;
+    if (canToggle) {
+      ctx.setDomeVisible(domeShown);   // cheap; re-applies after the view is recreated
+      setText(subs.domeToggle, t(domeShown ? 'ui.dome.hide' : 'ui.dome.show'));
+    }
     cityOn = city.update(state);
     if (cityPanelEl) cityPanelEl.hidden = !cityOn;
     cityBtn.hidden = !cityOn;

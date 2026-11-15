@@ -124,7 +124,7 @@ export function createView(container, { onSlotClick, onSiteClick, onSlotContext 
   staticMesh.castShadow = true;
   scene.add(staticMesh);
   const dome = createDome();
-  dome.setGrid(gridN);
+  dome.setBounds(bounds);
   scene.add(dome.object);
   let domeSig = '';
   let domeExtra = 0;   // extra screen height (world units) reserved for the dome while it exists
@@ -242,7 +242,7 @@ export function createView(container, { onSlotClick, onSiteClick, onSlotContext 
       staticMesh.geometry = terrain.geometry;
       old.dispose();
     }
-    dome.setGrid(n);
+    dome.setBounds(bounds);
     for (const v of views.values()) { scene.remove(v.group); v.dispose(); }
     views.clear(); slotInfo.clear(); lastSig.clear();
     for (const pm of slotPicks.values()) pickRoot.remove(pm);
@@ -262,7 +262,7 @@ export function createView(container, { onSlotClick, onSiteClick, onSlotContext 
       if (mm && mm.type === 'radShield' && mm.status !== 'building') shield = true;
     }
     const dsig = domeMod ? 'd' + (shield ? 'a' : '') : '';
-    if (dsig !== domeSig) { domeSig = dsig; domeExtra = domeMod ? 22 : 0; if (W) frame2D(); }
+    if (dsig !== domeSig) { domeSig = dsig; domeExtra = domeMod ? 30 : 0; if (W) frame2D(); }
     domeInfo.exists = !!domeMod; domeInfo.building = !!domeMod && domeMod.status === 'building';
     domeInfo.progress = domeMod ? domeMod.progress || 0 : 0; domeInfo.amber = shield;
     for (const slot of st.slots || []) {
@@ -622,6 +622,7 @@ export function createView(container, { onSlotClick, onSiteClick, onSlotContext 
 
   return {
     update, setSelected, setInsets, resetCamera, resize, dispose,
+    setDomeVisible: (on) => dome.setVisible(on),
     // debug only (dev page): last frame draw calls / triangles
     _info: () => ({ ...lastInfo }),
   };
