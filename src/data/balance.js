@@ -64,7 +64,6 @@ export const MODULES = {
     ],
   },
   reactor: {
-    unique: true,
     requiresTech: 'fission',
     levels: [
       { kwe: 10, cost: { parts: 40, regolith: 10 }, buildSols: 4 },
