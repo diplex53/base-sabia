@@ -43,3 +43,24 @@ body.is-demo #city-panel.demo-focus { outline: 3px solid #ff8a3d; outline-offset
 .demo-caption .demo-continue[hidden] { display: none; }
 @keyframes demo-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(255, 138, 61, 0.55); } 50% { box-shadow: 0 0 0 6px rgba(255, 138, 61, 0); } }
 @media (prefers-reduced-motion: reduce) { .demo-caption .demo-continue { animation: none; } }
+
+/* Presentation: slim HUD so the base is visible. Only the resource bar stays; the side panels,
+   the bottom bar and the phone tabs are hidden. The City panel appears only during its own beat. */
+body.is-demo #left-stack,
+body.is-demo #slot-panel,
+body.is-demo #sheet-tabs,
+body.is-demo .controls,
+body.is-demo #story-card { display: none !important; }
+body.is-demo #city-panel:not(.demo-focus) { display: none !important; }
+body.is-demo #city-panel.demo-focus { display: block !important; }
+/* Caption as a low strip: text and button on one line when there is room. */
+body.is-demo .demo-caption:not([hidden]) {
+  display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px 18px;
+  bottom: 14px; width: min(980px, calc(100vw - 460px)); padding: 10px 18px;
+  font-size: clamp(16px, 1.6vw, 21px); background: rgba(13, 11, 18, 0.86);
+}
+body.is-demo .demo-caption .demo-caption-text { flex: 1 1 320px; }
+body.is-demo .demo-caption .demo-continue { margin-top: 0; flex: none; padding: 7px 16px; font-size: 15px; }
+@media (max-width: 1100px) {
+  body.is-demo .demo-caption:not([hidden]) { bottom: 58px; width: calc(100vw - 24px); padding: 9px 14px; }
+}
