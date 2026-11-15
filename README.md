@@ -1,4 +1,4 @@
-# Hunters
+# <span translate="no">Hunters</span>
 
 ### Integrantes: João Pedro, Arthur Vieira, Gabriel Brant, Gabriel Janke, Lucas Dias e Nicolas Silva
 
