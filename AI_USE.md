@@ -44,6 +44,7 @@ Cada linha: o que pedimos, por que pedimos, o que a IA fez.
 | Dom, 11h25 | Inventário na tecla V, receitas na tecla P, e substituir o sistema de peças pelos itens e minérios da lista | A equipe quer que o jogo final use o sistema de recursos que ela desenhou | Repassado ao subagente do crafting. A IA apontou que as receitas eram circulares (a broca avançada precisa de minérios que só ela extrai) e propôs a correção: começar com mesa de produção e broca básica, e as naves trazem minérios avançados. A troca fica atrás de uma chave para poder voltar ao sistema antigo se não der tempo de testar |
 | Dom, 11h40 | Tirar o painel "Módulo" da direita | Ficou sem função depois que a construção virou pop-up | Subagente esconde o painel quando não há estrutura selecionada; ele só aparece para melhorar, ligar ou consertar uma estrutura |
 | Dom, 11h40 | Publicar o mapa de 72 espaços e o crafting | Pedidos da equipe prontos e testados | A IA juntou, rodou os 62 testes e conferiu no navegador antes de publicar. Entrou a parte aditiva do crafting (brocas, mesa de produção, kits, inventário e fabricação). A troca completa do sistema de peças pelos itens não ficou pronta a tempo de ser testada e não foi publicada |
+| Dom, 12h05 | Domo maior e completo, com botão para ocultar; apresentação que pausa a cada novidade para a equipe explicar; formatação do menu de construção; usar de verdade o crafting (peneirar regolito e tirar ferro e outros materiais) | A equipe vai explicar o jogo ao vivo para a banca e quer que o sistema de recursos que ela desenhou seja o do jogo | Três subagentes em paralelo. A IA revisou no navegador e achou um erro que travava o "Novo jogo" (faltava uma importação), corrigiu, rodou os testes e publicou. A IA aumentou os itens iniciais da economia de crafting porque, com os números originais, a energia não chegava para o primeiro painel solar; as receitas da equipe não foram alteradas |
 
 ## O que a IA não decidiu
 
@@ -54,5 +55,5 @@ Cada linha: o que pedimos, por que pedimos, o que a IA fez.
 ## Limites e cuidados
 
 - Números de jogo que não têm fonte (custos, tempos de obra, pontuação) ficam em `src/data/balance.js`, separados das constantes científicas, e os sem fonte levam a marca `ASSUMPTION`.
-- A IA pode errar: por isso há 62 testes automáticos do núcleo e conferência no navegador antes de publicar.
+- A IA pode errar: por isso há 63 testes automáticos do núcleo e conferência no navegador antes de publicar.
 - Nenhum dado pessoal dos participantes foi colocado no jogo ou na demo.

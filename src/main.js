@@ -1,5 +1,5 @@
 import { createGame, loadGame } from './sim/index.js';
-import { TIME } from './data/balance.js';
+import { TIME, DEFAULT_ECONOMY } from './data/balance.js';
 import { t, onLangChange } from './i18n/i18n.js';
 import { applyStatic } from './ui/util.js';
 import { toast } from './ui/toast.js';

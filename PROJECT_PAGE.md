@@ -20,9 +20,9 @@ The game is intended for children ages 7–12 with adult or classroom guidance w
 
 Players construct and upgrade modules on a 72-slot base map through a central build menu, where every structure card carries a short science note. They assign crew specialists, send expeditions and decide which incoming colonists the base can support. Solar generation varies with day/night, airborne dust and panel dust. Life-support systems consume electricity while producing resources. Radiation accumulates, and sheltering protects people while pausing outside work. A colony-health score reacts to shortages, a technology tree unlocks advanced structures, and the long-term goal is a protective dome.
 
-A crafting layer designed by the team adds drills that mine ores, a production table that turns them into parts such as iron bars, wire and glass, and structure kits that build faster. Inventory opens with V and crafting with P.
+In colony mode the economy is the crafting system designed by the team: drills mine ores, regolith can be sifted for iron, silicon and aluminum, a production table turns ores into parts such as iron bars, wire and glass, and structures are built from crafted kits and items. Inventory opens with V and crafting with P.
 
-The story follows the fictional Sabiá crew through base construction, dust storms and solar-particle events. Colony mode offers continued growth and seeded random events. The Science Notebook collects short explanations and links to the underlying evidence. A presentation mode (`?demo=1` or the button on the title screen) plays the game by itself with captions.
+The story follows the fictional Sabiá crew through base construction, dust storms and solar-particle events. Colony mode offers continued growth and seeded random events. The Science Notebook collects short explanations and links to the underlying evidence. A presentation mode (`?demo=1` or the button on the title screen) plays the game by itself and pauses with a caption at each new structure or event, so a presenter can explain it and continue with the space bar.
 
 The optional Real Sun mode uses recent NASA DONKI flare records to schedule educational storms. The interface labels live data and archive fallback. A communication-conjunction mechanic challenges players to prepare for limited Earth support. Flare-to-storm conversion and blackout timing are simplified teaching rules, not forecasts for Mars.
 
@@ -38,7 +38,7 @@ Source links appear inside the game and in `REFERENCES.md`. Measured inputs, cal
 
 ## Tools and architecture
 
-HTML, CSS, native JavaScript ES modules and a locally bundled Three.js library. The pure JavaScript simulation is independent of the renderer and is covered by 62 automated Node tests. A 2D fallback uses the same simulation if 3D cannot run. The static site needs no account or backend; a live DONKI request is optional, and the historical catalogue is bundled locally.
+HTML, CSS, native JavaScript ES modules and a locally bundled Three.js library. The pure JavaScript simulation is independent of the renderer and is covered by 63 automated Node tests. A 2D fallback uses the same simulation if 3D cannot run. The static site needs no account or backend; a live DONKI request is optional, and the historical catalogue is bundled locally.
 
 ## What makes the approach different
 
