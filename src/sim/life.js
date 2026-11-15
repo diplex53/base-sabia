@@ -6,6 +6,7 @@
 import { GREENHOUSE } from '../data/balance.js';
 import { rawModuleRates, isActive, isBuilt, headcount, crewUse, storageCap } from './model.js';
 import { setAlert, showPanel } from './alerts.js';
+import { grantParts } from './crafting.js';
 
 export function stepLife(state, dt, emit) {
   const crew = crewUse(state, headcount(state));
@@ -23,7 +24,8 @@ export function stepLife(state, dt, emit) {
   res.water = Math.max(0, res.water + (waterProd - crew.water - ghWater) * dt);
   res.food = Math.max(0, res.food + (foodProd - crew.food) * dt);
   res.regolith = Math.max(0, res.regolith + regolith * dt);
-  res.parts = Math.max(0, res.parts + parts * dt);
+  if (state.economy === 'craft' && parts > 0) grantParts(state, parts * dt); // craft economy: iron, copper, silicon
+  else res.parts = Math.max(0, res.parts + parts * dt);
   res.methane = Math.min(storageCap(state, 'methane'), Math.max(0, (res.methane || 0) + methane * dt));
 
   const rt = state.rates;

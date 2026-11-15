@@ -6,6 +6,7 @@ import { EVENTS } from '../data/balance.js';
 import { findSlot } from './build.js';
 import { crewWorkSpeed } from './dust.js';
 import { endObserved } from './events.js';
+import { hasParts, payParts } from './crafting.js';
 
 export function actRepair(state, { slotId }) {
   const sl = findSlot(state, slotId);
@@ -13,8 +14,8 @@ export function actRepair(state, { slotId }) {
   const m = sl.module;
   if (!m) return 'err.slotEmpty';
   if (m.status !== 'broken') return 'err.notBroken';
-  if (state.resources.parts < EVENTS.failure.repairParts) return 'err.notEnoughParts';
-  state.resources.parts -= EVENTS.failure.repairParts;
+  if (!hasParts(state, EVENTS.failure.repairParts)) return 'err.notEnoughParts';
+  payParts(state, EVENTS.failure.repairParts); // craft economy: iron bars
   m.status = 'repairing';
   m.progress = 0;
   return null;

@@ -13,6 +13,8 @@ import { random } from './rng.js';
 import { hasTech } from './model.js';
 import { findColonist, unassign } from './colonists.js';
 import { showPanel } from './alerts.js';
+import { grantParts, invAdd } from './crafting.js';
+import { MINERALS_ORES } from '../data/crafting.js';
 
 export const roverCount = (state) => (hasTech(state, 'pressurizedRover') ? TECH_EFFECTS.roversTech : TECH_EFFECTS.rovers);
 
@@ -73,8 +75,9 @@ function finish(state, e, emit) {
   const reward = {};
   for (const [k, v] of Object.entries(def.reward)) {
     reward[k] = Math.floor(v * e.rewardFrac * geo + 1e-9);
-    state.resources[k] = (state.resources[k] || 0) + reward[k];
+    if (k === 'parts') grantParts(state, reward[k]); else state.resources[k] = (state.resources[k] || 0) + reward[k];
   }
+  if (state.economy === 'craft' && e.site === 'minerals') for (const [k, v] of Object.entries(MINERALS_ORES)) invAdd(state, k, Math.floor(v * e.rewardFrac * geo + 1e-9));
   const science = def.science * e.rewardFrac * geo;
   state.resources.science += science;
   if (c) c.location = 'habitat'; // shelter.placeColonists puts them in the shelter if it is on

@@ -18,6 +18,8 @@ import { random } from './rng.js';
 import { peopleCapacity, headcount, nominalProduction, crewUse, activeCount } from './model.js';
 import { unassign } from './colonists.js';
 import { showPanel } from './alerts.js';
+import { grantParts, invAdd } from './crafting.js';
+import { SHIP_ORES } from '../data/crafting.js';
 
 /** Why one more person cannot land ('habitat' | 'o2' | 'water' | 'food') or null. */
 export function sustainCheck(state) {
@@ -56,7 +58,8 @@ function arrive(state, emit) {
   const sh = state.ship;
   const manifest = sh.manifest || makeManifest(state);
   const cargo = manifest.cargo;
-  for (const [k, v] of Object.entries(cargo)) state.resources[k] = (state.resources[k] || 0) + v;
+  for (const [k, v] of Object.entries(cargo)) { if (k === 'parts') grantParts(state, v); else state.resources[k] = (state.resources[k] || 0) + v; }
+  if (state.economy === 'craft') for (const [k, v] of Object.entries(SHIP_ORES)) invAdd(state, k, v);
   state.sim.shipsArrived = (state.sim.shipsArrived || 0) + 1;
 
   // retired colonists on base go home (one still on an expedition waits for the next ship)

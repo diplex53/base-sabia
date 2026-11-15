@@ -182,7 +182,7 @@ async function startColony(difficulty, useRealSun = false) {
   } finally { colonyStarting = false; }
   modals.closeAll();
   const live = sun && sun.status === 'live';
-  game = createGame({ mode: 'colony', seed: Date.now(), difficulty,
+  game = createGame({ mode: 'colony', seed: Date.now(), difficulty, economy: DEFAULT_ECONOMY,
     ...(live ? { liveFlares: sun.flares, liveWindowStart: sun.startDate } : {}) });
   if (useRealSun) toast(t(live ? (game.state.realSun && game.state.realSun.storms.length ? 'sun.gameLive' : 'sun.gameQuiet') : 'sun.gameArchive'));
   selected = null;
