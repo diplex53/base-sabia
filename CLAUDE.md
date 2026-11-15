@@ -1,30 +1,46 @@
 # Base Sabiá — Junior Astronaut Mission Trainer (NASA Space Apps BH 2026)
 
 Jogo web de gestão de colônia em Marte, voxel 3D, PT/EN, site estático sem build.
+Publicado em https://diplex53.github.io/base-sabia/ (repositório público `diplex53/base-sabia`, Pages na `main`, raiz).
 
-## Estado atual (dom 15/11, 9h)
+## Se você é uma sessão nova (troca de conta): leia isto primeiro
 
-- Pronto: núcleo da simulação (`src/sim`, 44 testes), HUD, visual 3D (`src/render3d`) com reserva 2D, eventos, tecnologias, expedições, naves, níveis Cadete/Comandante, painéis científicos com fonte, catálogo real do DONKI, salvamento, menu do Esc, botão "i".
-- Em andamento: modo história (3 capítulos) e ajustes do Apêndice D (Sol real, conjunção solar).
-- Falta: página do projeto em inglês, `REFERENCES.md`, declaração de uso de IA, demo.
-- Submit: domingo até 13h45. Congelar código às 11h.
+- Papel do Claude: arquiteto e orquestrador. Não escreve código do jogo direto; delega por subagentes (`model: "sonnet"` para tarefa clara de HTML/CSS/texto, `model: "opus"` para implementação difícil), com tarefa autocontida e dono de arquivo definido, e revisa o resultado.
+- Falar em português do Brasil, direto, sem emoji. Avisar quando um pedido arrisca o prazo.
+- Prazos de domingo 15/11: **enviar até 13h45** (banca às 14h30). Depois das 11h só entra o que estiver testado.
+- Toda a equipe é menor de idade: demo sem rosto, voz ou nome. Sem logo da NASA. Uso de IA tem de ser declarado (`AI_USE.md`).
+- Nunca publicar nome de participante, senha ou token. Capturas de tela estão no `.gitignore`.
+- A `main` é o site no ar. Trabalho novo vai em branch e só entra na `main` depois de `node tests/run.mjs` passar e de conferir no navegador. Etiquetas de retorno: `estavel-0910` (antes da expansão) e o commit `417c0b5` (expansão, no ar).
+
+## Estado atual (dom 15/11, 11h)
+
+- No ar (`main`, commit `417c0b5`): núcleo da simulação (`src/sim`, 56 testes), HUD, visual 3D com reserva 2D (`?view=2d`), eventos, tecnologias, expedições, naves, níveis Cadete/Comandante, painéis científicos com fonte, catálogo real do DONKI e busca ao vivo, modo história (3 capítulos), Sol real, expansão do Apêndice E (mapa 6x6, 12 estruturas novas, saúde da colônia, domo, painel Cidade).
+- Em andamento na branch **`ui-popup`** (ainda NÃO na `main`), três subagentes:
+  1. Pop-up central de construção no lugar da lista no canto. Arquivos: `src/ui/slotPanel.js`, `css/buildMenu.css`, `src/i18n/pt8.js`/`en8.js`.
+  2. Tela de tecnologias como árvore de bolinhas ligadas. Arquivos: seção de tecnologias de `src/ui/modals.js`, `css/techTree.css`, `pt9.js`/`en9.js`.
+  3. Modo apresentação que joga sozinho (`?demo=1` e botão na tela inicial), com legendas. Arquivos: `src/demo/autoplay.js`, `css/demo.css`, `pt10.js`/`en10.js`, ganchos pequenos em `src/main.js` e na tela inicial.
+  Se a sessão caiu no meio: rodar `git status` e `git diff` na `ui-popup`, abrir http://localhost:8080/, conferir cada um dos três no navegador (console sem erro, 3D e `?view=2d`, tela estreita), consertar ou descartar o que estiver quebrado, rodar os testes, e só então `git checkout main && git merge ui-popup && git push`.
+- Falta, sem código: revisar `PROJECT_PAGE.md`, `REFERENCES.md` e `DEMO_SCRIPT.md` (foram escritos fora desta sessão e ainda não cobrem a expansão), gravar a demo, enviar.
+- Pendências conhecidas: texto de `err.notStaffable` não existe nos arquivos de idioma; domo fácil demais no Cadete (bot termina entre os sols 109 e 170); cerca de 30 fps no 3D com o mapa maior; capítulos 2 e 3 da história testados só por bot.
+- Fora do escopo (dito à equipe como "futuro"): crafting com minérios, mapa 2500x, barras de qualidade de vida com taxas inventadas, casas e prédios.
+- O primeiro commit do repositório (`1fdb3e7`) contém o primeiro nome do líder da equipe. Reescrever o histórico exige autorização dele; ainda não foi dada.
 
 ## Decisões
 
-- `DESIGN.md` é a especificação; os Apêndices A a D são os contratos entre módulos.
+- `DESIGN.md` é a especificação; os Apêndices A a E são os contratos entre módulos.
 - Núcleo é JS puro (sem DOM nem Three.js). Constantes científicas em `src/data/constants.js`, cada uma com fonte; valores de jogo em `src/data/balance.js`.
-- Público declarado: 7 a 12 anos. Derrota é missão abortada, sem morte na tela.
-- Toda a equipe é menor de idade: demo sem rosto, voz ou nome.
-- Repositório público porque o GitHub Pages gratuito exige.
+- Público declarado: 7 a 12 anos, mas a banca é adulta: simples sem ser bobo. Derrota é missão abortada, sem morte na tela.
+- Textos novos entram em arquivos `ptN.js`/`enN.js` espalhados em `pt.js`/`en.js`; CSS novo em arquivo próprio ligado no `index.html`. Assim subagentes em paralelo não se atropelam.
+- `AI_USE.md` é o relatório de uso de IA: atualizar a cada pedido novo (o que foi pedido, por quê, o que a IA fez, o que a equipe decidiu).
 
 ## Como rodar
 
-- Jogo: `node tools/serve.mjs 8080` e abrir http://localhost:8080/ (`?view=2d` força o visual 2D).
-- Testes: `node tests/run.mjs` (`--report` mostra o balanceamento).
+- Jogo: `node tools/serve.mjs 8080` e abrir http://localhost:8080/ (`?view=2d` força o visual 2D; `?demo=1` inicia a apresentação automática, quando ela entrar).
+- Testes: `node tests/run.mjs` (cerca de 90 s; `--report` mostra o balanceamento).
 - Regenerar o catálogo DONKI: `node tools/fetch-donki.mjs`.
 
 ## Próximos passos
 
-1. Fechar a história e conferir no navegador.
-2. Deploy no Pages e teste em aba anônima.
-3. Página do projeto, referências, declaração de IA, demo, submit.
+1. Receber os três subagentes, revisar, testar no navegador, juntar na `main`.
+2. Abrir o site publicado em aba anônima e no PC da banca.
+3. Atualizar página do projeto, referências e roteiro da demo; gravar; enviar até 13h45.

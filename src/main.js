@@ -77,6 +77,7 @@ const ctx = {
   openShip: () => { if (!modals.showShipInfo(game.state)) toast(t('ui.shipIn', { n: Math.max(0, Math.ceil(game.state.ship.nextArrivalT - game.state.t)) })); },
   openShipDecision: () => modals.openShipDecisionNow(),
   getSelected: () => selected,
+  clearSelection: () => { selected = null; if (view) view.setSelected(null); },
   getSpeed: () => speed,
   isHeld: () => modals.isOpen() || !started || !!game.state.over || !!(game.state.story && game.state.story.complete),
   setSpeed,

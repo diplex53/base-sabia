@@ -1,3 +1,5 @@
+import e9 from './en9.js';
+import e8 from './en8.js';
 import e7 from './en7.js';
 import e6 from './en6.js';
 import e5 from './en5.js';
@@ -256,4 +258,6 @@ export default {
   ...e5,
   ...e6,
   ...e7,
+  ...e8,
+  ...e9,
 };

@@ -12,3 +12,4 @@ build/
 .next/
 .wrangler/
 .claude/settings.local.json
+Captura de tela*.png

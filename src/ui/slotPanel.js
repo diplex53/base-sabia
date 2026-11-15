@@ -46,25 +46,68 @@ export function createSlotPanel(root, ctx) {
     return [el('div', { class: 'inspector-empty' }, el('span', { class: 'empty-cross', 'aria-hidden': 'true' }, '+'), el('p', { class: 'muted' }, t('ui.noSlot')))];
   }
 
-  function viewEmpty(slot) {
+  // ---- build menu pop-up (self-contained overlay) ----
+  let pop = null;
+  function closePopup() {
+    if (!pop) return;
+    document.removeEventListener('keydown', pop.onKey);
+    pop.back.remove();
+    pop = null;
+  }
+  function dismissPopup() {
+    closePopup();
+    if (ctx.clearSelection) ctx.clearSelection();
+  }
+  function ensurePopup() {
+    if (pop) return;
+    const title = el('h2', { id: 'build-menu-title', class: 'build-menu-title' });
+    const closeBtn = el('button', { type: 'button', class: 'btn btn-round build-menu-close', 'aria-label': t('ui.close'), title: t('ui.close'), 'data-fid': 'build-close', onclick: dismissPopup }, '×');
+    const content = el('div', { class: 'build-menu-body' });
+    const box = el('div', { class: 'build-menu', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'build-menu-title' },
+      el('div', { class: 'build-menu-head' }, title, closeBtn), content);
+    const back = el('div', { class: 'build-menu-back', onclick: (e) => { if (e.target === back) dismissPopup(); } }, box);
+    const onKey = (e) => { if (e.key === 'Escape') { e.stopPropagation(); e.preventDefault(); dismissPopup(); } };
+    document.addEventListener('keydown', onKey);
+    document.body.appendChild(back);
+    pop = { back, title, content, closeBtn, onKey };
+    closeBtn.focus();
+  }
+
+  function renderPopup(slot) {
+    ensurePopup();
     const g = ctx.getGuide();
-    const shown = cache.opts.filter((o) => !moduleHidden(ctx.getState(), o.type));
-    const items = shown.map((o) => el('li', { class: 'opt' + (ctx.isNew('module', o.type) ? ' is-new' : '') },
-      el('div', { class: 'opt-head' }, icon(MODULE_ICONS[o.type]), el('strong', {}, modName(o.type)), ctx.isNew('module', o.type) ? el('span', { class: 'new-tag' }, t('story.new')) : null),
-      el('p', { class: 'muted' }, modDesc(o.type)),
-      el('p', { class: 'small' }, t('ui.cost', { c: costText(o.cost) }) + '. ' + t('ui.buildTime', { n: fmt(o.buildSols, 1) })),
-      el('button', {
-        type: 'button', class: 'btn btn-primary' + (g.build === o.type ? ' guide-target' : ''), 'data-fid': 'build-' + o.type, disabled: !o.ok,
-        onclick: () => act({ type: 'build', slotId: slot.id, moduleType: o.type }),
-      }, t('ui.build')),
-      o.ok ? null : el('p', { class: 'reason' }, t(o.reason || 'err.locked'))));
-    const byType = new Map(shown.map((o, i) => [o.type, items[i]]));
+    const state = ctx.getState();
+    const shown = cache.opts.filter((o) => !moduleHidden(state, o.type));
+    const card = (o) => {
+      const isNew = ctx.isNew('module', o.type);
+      return el('li', { class: 'opt' + (isNew ? ' is-new' : '') },
+        el('div', { class: 'opt-head' }, icon(MODULE_ICONS[o.type]), el('strong', {}, modName(o.type)), isNew ? el('span', { class: 'new-tag' }, t('story.new')) : null),
+        el('p', { class: 'muted' }, modDesc(o.type)),
+        el('p', { class: 'small' }, t('ui.cost', { c: costText(o.cost) }) + '. ' + t('ui.buildTime', { n: fmt(o.buildSols, 1) })),
+        o.ok ? null : el('p', { class: 'reason' }, t(o.reason || 'err.locked')),
+        el('button', {
+          type: 'button', class: 'btn btn-primary' + (g.build === o.type ? ' guide-target' : ''), 'data-fid': 'build-' + o.type, disabled: !o.ok,
+          onclick: () => { const r = act({ type: 'build', slotId: slot.id, moduleType: o.type }); if (!r || r.ok !== false) closePopup(); },
+        }, t('ui.build')));
+    };
+    const byType = new Map(shown.map((o) => [o.type, card(o)]));
     const groups = SECTIONS.map(([id, types]) => [id, types.filter((x) => byType.has(x))]);
     const known = new Set(SECTIONS.flatMap(([, ty]) => ty));
     groups.push(['other', shown.map((o) => o.type).filter((x) => !known.has(x))]);
     const secs = groups.filter(([, ty]) => ty.length).map(([id, ty]) => el('section', { class: 'opt-sec' },
-      el('h4', { class: 'opt-sec-title' }, t('ui.sec.' + id)), el('ul', { class: 'opt-list' }, ty.map((x) => byType.get(x)))));
-    return [el('h3', {}, t('ui.emptySlot', { id: slot.id })), el('p', {}, t('ui.chooseBuild')), ...secs];
+      el('h4', { class: 'opt-sec-title' }, t('ui.sec.' + id)), el('ul', { class: 'opt-list build-grid' }, ty.map((x) => byType.get(x)))));
+    const a = document.activeElement;
+    const fid = a && pop.back.contains(a) ? a.dataset.fid : null;
+    const top = pop.content.scrollTop;
+    setText(pop.title, t('ui.buildMenuTitle', { id: slot.id }));
+    pop.closeBtn.setAttribute('aria-label', t('ui.close'));
+    pop.content.replaceChildren(...secs);
+    pop.content.scrollTop = top;
+    if (fid) { const n = pop.back.querySelector('[data-fid="' + fid + '"]'); if (n && !n.disabled) n.focus({ preventScroll: true }); }
+  }
+
+  function viewEmpty(slot) {
+    return [el('h3', {}, t('ui.emptySlot', { id: slot.id })), el('p', { class: 'muted' }, t('ui.buildMenuHint'))];
   }
 
   function viewModule(slot, state) {
@@ -185,9 +228,9 @@ export function createSlotPanel(root, ctx) {
     s += '|' + getLang() + '|' + JSON.stringify(ctx.getGuide()) + '|' + ctx.newSig() + '|' + ['assign', 'clean', 'toggle'].map((x) => (ctx.featureOn(x) ? 1 : 0)).join('') + (state.unlocked && state.unlocked.modules ? state.unlocked.modules.length : '');
     if (s !== sig) {
       sig = s;
-      if (!slot) rebuild(viewNone);
-      else if (!slot.module) rebuild(() => viewEmpty(slot));
-      else rebuild(() => viewModule(slot, state));
+      if (!slot) { closePopup(); rebuild(viewNone); }
+      else if (!slot.module) { rebuild(() => viewEmpty(slot)); renderPopup(slot); }
+      else { closePopup(); rebuild(() => viewModule(slot, state)); }
     }
     if (slot && slot.module) live(state, slot);
   }
