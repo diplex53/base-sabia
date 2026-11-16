@@ -1,8 +1,8 @@
-# <span translate="no">Hunters</span>
+# `Hunters`
 
 ### Integrantes: João Pedro, Arthur Vieira, Gabriel Brant, Gabriel Janke, Lucas Dias e Nicolas Silva
 
-# Protocol: Ares — Junior Astronaut Mission Trainer
+# `Protocol: Ares` — Junior Astronaut Mission Trainer
 
 A browser game about keeping a Mars base alive, built for the NASA Space Apps Challenge 2026 (Belo Horizonte), challenge "Junior Astronaut Mission Trainer".
 
