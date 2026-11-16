@@ -1,6 +1,7 @@
 # `Hunters`
 
 ### Integrantes: João Pedro, Arthur Vieira, Gabriel Brant, Gabriel Janke, Lucas Dias e Nicolas Silva
+### Contatos: +55 31 9748-2642 Gabriel Brant - +55 31 8980-8169 Arthur Vieira - +55 31 9113-5506 Gabriel Janke - +55 31 9896-2037 Nicolas Felix - +55 31 98322-3473 Lucas Dias Whatsapp ou faça uma ligação.
 
 # `Protocol: Ares` — Junior Astronaut Mission Trainer
 
